@@ -1,0 +1,33 @@
+Perform all actions for creating/provisioning a basic lun with no auth from a text based wizard
+
+Existing or new pool.  
+	New, 
+		ask for cache-tier assisted or normal pool
+			Display available osd groupings allow choice of appropriate osds for the pool(s)
+			If cache tier, select write-through or write-back mode
+			Set pool name
+			Set pool protection level(s)
+		create pools with information from above
+	Existing - list pool and prompt for selection
+		ceph osd lspools
+RBD setup
+	If existing pool, ask for existing or new RBD
+		If existing list RBD images in selected pool
+		Allow selection
+			rbd ls -l pool name (show if already mapped as well)
+	Else
+		Capture new rbd name (ensure it does not conflict with existing)
+		Capture new rbd size
+		Create RBD
+			rbd -p rbd2 create iscsitest.lun0 --size 10000
+			in configuration file, make sure host specified matches the right IP for iscsi target
+			
+		
+Initiators for this lun
+	Allow listing of existing known iscsi initiators and selection of them for this target device
+	Also allow for entry of new initiators (separated by a space)
+	What lun ID (disallow lun IDs that already in use by the initiators)
+	Allow selection of target portal(s) to associate with?
+	
+Add RBD, initiators and portals to configuration file
+ 
