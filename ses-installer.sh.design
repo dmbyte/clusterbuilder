@@ -1,0 +1,24 @@
+Usage: Only to be used when every node of each type is identical in hardware 
+configuration.  Script will potentially update ceph.conf with cluster network 
+setting.  Will deploy iSCSI and rgw components.  Nodes need to already be 
+deployed with base OS and have an ip on an interface.  If bonded modes are to 
+be used and no extra ports are present, swtich and host should already have 
+basic configuration in place.
+
+Gather information
+	Domain name
+	Dns server
+IP range/addresses  for OSD nodes
+Name prefix to be used for OSD nodes.  
+	Final name will be prefix-x eg osd-10
+
+IP range/addresses to be used for Mon nodes
+Name prefix to be used for Mon nodes
+	Final name will be prefix-x eg mon-3
+	
+Rgw deployed?  If so, shared with other nodes or unique.  
+	If shared, which nodes
+	If unique, what IP range/addresses
+iSCSI gateways deployed?  If so, shared or unique
+	If shared, which nodes
+If unique, what IP range/addresses
