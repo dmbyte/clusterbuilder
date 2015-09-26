@@ -1,0 +1,6 @@
+Usage: configure initial iscsi setup
+
+	identify the network(s) that should be serving iscsi
+        identify nodes to deploy lrbd onto
+
+        deploy iscsi services to appropriate nodes and write initial json file
