@@ -12,7 +12,7 @@ if [ "$#" = "3" ]; then
 			hostlist=`grep "type=mon" ~ceph/nodes.lst|cut -f1 -d":"|xargs`
 			;;
 		ALL)
-			hostlist=`grep "type=" ~ceph/nodes.lst|cust -f1 -d":"|xargs`
+			hostlist=`grep "type=" ~ceph/nodes.lst|cut -f1 -d":"|xargs`
 			;;
 	esac
 	for node in $hostlist
@@ -23,7 +23,7 @@ if [ "$#" = "3" ]; then
 		elif [ "$1" = "to" ]; then
 			echo $node
 			command=${3/NODE/$node}
-			echo $command
+			`$command`
 		fi
 		
 	done
