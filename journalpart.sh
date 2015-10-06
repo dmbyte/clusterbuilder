@@ -20,20 +20,23 @@ for (( p=1; p<=parts ; p ++ ))
                         pend=$(($psize * $p + 1))
                         pstart=$(($pend-$psize))
                         parted -a optimal -s $pdev unit compact mkpart primary xfs "$pstart"g "$pend"g
+                        mkfs.xfs -f -n size=64k "$pdev""$p"
                 elif [ $p -eq 4 -a  $parts -lt 5 ]; then
                         pend=$(($psize * $p + 1))
                         pstart=$(($pend-$psize))
                         parted -a optimal -s $pdev unit compact mkpart primary xfs "$pstart"g "$pend"g
+                        mkfs.xfs -f -n size=64k "$pdev""$p"
                 elif [ $p -eq 4 -a  $parts -gt 4 ];then
                         pend=$(($psize * $p + 1))
                         pstart=$(($pend-$psize))
                         pextendedend=$((($parts-3)*$psize+$pstart))
                         parted -a optimal -s $pdev unit compact mkpart extended "$pstart"g "$pextendedend"g
                         parted -a optimal -s $pdev unit compact mkpart logical xfs "$pstart"g "$pend"g
+                        mkfs.xfs -f -n size=64k "$pdev""$(($p + 1))"
                 elif [ $p -gt 4 ]; then
                         pend=$(($psize * $p + 1))
                         pstart=$(($pend-$psize))
                         parted -a optimal -s $pdev unit compact mkpart logical xfs "$pstart"g "$pend"g
+                        mkfs.xfs -f -n size=64k "$pdev""$(($p + 1))"
                 fi
         done
-
