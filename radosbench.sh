@@ -6,9 +6,9 @@ osdcount=`ceph osd tree|grep host|awk -F"host" '{print $2}'|wc -l`
 benchtime=300
 
 #create bench2 and bench3 pools
-ceph osd pool create bench2 4096 replicated
+ceph osd pool create bench2 2048 replicated
 ceph osd pool set bench2 size 2
-ceph osd pool create bench3 4096 replicated
+ceph osd pool create bench3 2048 replicated
 ceph osd pool set bench2 size 3
 format="%5s     %10s     %10s     %10s     %10s\n"
 printf "$format" "Test    " "Pool" "Thread" "Bandwidth" "Latency"&2>&1>>output
