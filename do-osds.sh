@@ -1,5 +1,6 @@
 
 #input: [prototype] [list of other nodes]
+#This script is intended to be run to compare every node to the first in the argument list.
 
 #TODO: Write a check to verify all nodes are similar
 
