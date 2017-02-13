@@ -23,6 +23,7 @@ done
 	fio $command >$i.out
 	fio2gnuplot -b -g -o $i-bw
 	fio2gnuplot -i -g -o $i-iops
+        mkdir archive
 	mv $i*.log archive
 done
 
