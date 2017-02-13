@@ -1,4 +1,6 @@
 #!/bin/bash
+# the filename line needs to be modified to fit your device/file used for testing.
+# it should be uniform on all nodes
 
 for i in 4kr 4kw 8kr 8kw 64kr 64kw 1mr 1mw
 do
@@ -26,12 +28,6 @@ fi
 echo bs=$bs>>$i.fio
 echo direct=1>>$i.fio
 echo sync=1>>$i.fio
-# Set max acceptable latency to 500msec
-#echo latency_target=15000000>>$i.fio
-# profile over a 5s window
-#echo latency_window=5000000>>$i.fio
-# 99.9% of IOs must be below the target
-#echo latency_percentile=99.9 >>$i.fio
 
 echo write_bw_log=$i>>$i.fio
 echo write_iops_log=$i>>$i.fio
