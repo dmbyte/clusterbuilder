@@ -4,9 +4,7 @@ import os.path
 #os.path.isfile
 #os.path.exists
 
-#create = f.open("filename.txt", "w+")
-#for i in range(10):
-#     f.write("This is line %d\r\n" % (i+1))
+#create = f=open("filename.txt", "w+"))
 #read = f.open("filename.txt", "r")
 #append=f.open("filename.txt", "a+")
 #operations f.write
@@ -35,15 +33,16 @@ if not os.path.exists('/srv/install'):
     os.makedirs('/srv/install')
 
 
-makex86 = raw_input('Do you wish to deploy X86_64 nodes from this server? (y or n)')
-if makex86 == "y" or makex86 == "yes":
-    if not os.path.exists('/srv/install/x86'):
-        os.makedirs('/srv/install/x86/sles12/sp2/cd1')
-    if not os.path.exists('/srv/www/htdocs/SLE-12-SP2-Server-DVD-x86_64-GM-DVD1.iso'):
-        print('The ISO image for x86_64 needs to be located here:/srv/www/htdocs/SLE-12-SP2-Server-DVD-x86_64-GM-DVD1.iso')
+
+makearm = raw_input('Do you wish to deploy ARMv8 nodes from this server? (y or n)')
+if makearm == "y":
+    if not os.path.exists('/srv/install/armv8'):
+        os.makedirs('/srv/install/armv8/sles12/sp2/cd1')
+    if not os.path.exists('/srv/www/htdocs/SLE-12-SP2-Server-DVD-aarch64-GM-DVD1.iso'):
+        print('The ISO image for ARMv8 needs to be located here:/srv/www/htdocs/SLE-12-SP2-Server-DVD-aarch64-GM-DVD1.iso')
 	quit()
     else:
-        call(["mount", "-o loop /srv/www/htdocs/SLE-12-SP2-Server-DVD-x86_64-GM-DVD1.iso /srv/install/x86/sles12/sp2/cd1"])
+        call(["mount", "-o loop /srv/www/htdocs/SLE-12-SP2-Server-DVD-aarch64-GM-DVD1.iso /srv/install/armv8/sles12/sp2/cd1"])
         
       
 
@@ -89,12 +88,19 @@ f.write('  range %s %s;\r\n'%(rangestart, rangestop))
 f.write('  next-server %s;\r\n'%myip)
 f.write('  default-lease-time 3600;\r\n')
 f.write('  max-lease-time 3600;\r\n')
-f.write('  if option arch = 00:07 or option arch = 00:09 {\r\n')
-f.write('   filename "/EFI/x86/bootx64.efi";\r\n')
-f.write('    } else if option arch = 00:0b {\r\n')
-f.write('   filename "/EFI/armv8/bootaa64.efi";\r\n')
-f.write('    } else {\r\n')
-f.write('   filename "/bios/x86/pxelinux.0";\r\n')
+if makex86=="y" and makearm=="y":
+    f.write('   if option arch = 00:0b {\r\n')
+    f.write('   filename "/EFI/armv8/bootaa64.efi";\r\n')
+    f.write('  } else if option arch = 00:07 or option arch = 00:09 {\r\n')
+if makex86=="n" and makearm=="y":
+    f.write('   if option arch = 00:0b {\r\n')
+    f.write('   filename "/EFI/armv8/bootaa64.efi";\r\n')
+if makex86==y and makearm=="n":
+    f.write('  if option arch = 00:07 or option arch = 00:09 {\r\n')
+if makex86=="y":    
+    f.write('   filename "/EFI/x86/bootx64.efi";\r\n')
+    f.write('    } else {\r\n')
+    f.write('   filename "/bios/x86/pxelinux.0";\r\n')
 f.write('    }\r\n')
 f.write('}\r\n')
 f.close
