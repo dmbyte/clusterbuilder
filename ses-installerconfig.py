@@ -104,3 +104,7 @@ if makex86=="y":
 f.write('    }\r\n')
 f.write('}\r\n')
 f.close
+
+#write pxe message & grub.cfg files
+
+#write/modify autoyast files
