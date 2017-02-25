@@ -51,6 +51,7 @@ domainname=raw_input('Enter the domain name for this deployment:')
 defaultgw=raw_input('Enter the default gateway:')
 amIntp=raw_input('Use this server as NTP server')
 if amIntp=="y":
+    # get the IP from eth0.  Eventually needs to offer a list of interfaces, but this is good for round 1
     import netifaces as ni
     ni.ifaddresses('eth0')
     ntpserver = ni.ifaddresses('eth0')[2][0]['addr']
