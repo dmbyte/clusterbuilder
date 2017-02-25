@@ -16,6 +16,7 @@ import os.path
 import socket
 import fcntl
 import struct
+import shutil
 
 def get_ip_address(ifname):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -105,6 +106,69 @@ f.write('    }\r\n')
 f.write('}\r\n')
 f.close
 
+#make sure tftp is setup
+#should figure out if it is already present and enabled, maybe check /etc/xinetd.d/tftpd
+runtftp = raw_input('Do you need to run TFTP Configuration? (y or n)')
+if runtftp == "y":
+    #launch smt wizard
+    call(["yast2", "tftp-server"])
+
+# setup and activate NFS server exports
+runnfs = raw_input('We need NFS for the install source, run the configuration now? (y or n) ')
+if runnfs == 'y':
+    call(["yast2", "nfs-server"])
+    exports=open("/etc/exports","w")
+    exports.write('/srv/install  *(ro,root_squash,sync,no_subtree_check)')
+    exports.close
+    call(["systemctl", "restart nfs-server.service"])
+
 #write pxe message & grub.cfg files
+os.makedirs('/srv/tftpboot')
+if makex86=="y":
+    os.makedirs('/srv/tftpboot/bios/x86')
+    os.makedirs('/srv/tftpboot/EFI/x86/boot')
+    biosfiles=['linux', 'initrd', 'message']
+    biosfilesrc='/srv/install/x86/sles12/sp2/cd1/boot/x86_64/loader/'
+    for bfile in biosfiles:
+        shutil.copy( biosfilesrc + bfile, '/srv/tftpboot/bios/x86/'+bfile)
+    os.makedirs('/srv/tftpboot/bios/x86/pxelinux.cfg')
+    # need to copy in the pre-built default file here *******
+    shutil.copy('/usr/share/syslinux/pxelinux.0', '/srv/tftpboot/bios/x86/pxelinux.0')
+    default harddisk
+
+    #write the default file for bios pxe clients
+    pxedef=open('/srv/tftpboot/bios/x86/pxelinux.cfg/default','w')
+    pxedef.write('# hard disk')
+    pxedef.write('label harddisk')
+    pxedef.write('  localboot -2')
+    pxedef.write('# install')
+    pxedef.write('label install')
+    pxedef.write('  kernel linux')
+    pxedef.write('  append initrd=initrd showopts install=nfs://'+myip+'/srv/install/x86/sles12/sp2/cd1')
+
+    pxedef.write('display message')
+    pxedef.write('implicit 0')
+    pxedef.write('prompt 1')
+    pxedef.write('timeout 600')
+    pxedef.close()
+    
+    #write the message file
+    pxemsg=open('/srv/tftpboot/bios/x86/message','w')
+    pxemsg.write('                             Welcome to the Installer Environment! ')
+    pxemsg.write(' ')
+    pxemsg.write('To start the installation enter install and press <return>.')
+    pxemsg.write(' ')
+    pxemsg.write('Available boot options:')
+    pxemsg.write('  harddisk   - Boot from Hard Disk (this is default)')
+    pxemsg.write('  install     - Installation')
+    pxemsg.write(' ')
+    pxemsg.write('Have a lot of fun...')
+    
+    #do the efi files
+
+
+if makearm=="y":
+    os.makedirs('/srv/tftpboot/EFI/armv8/boot')
+
 
 #write/modify autoyast files
