@@ -18,15 +18,26 @@ def get_ip_address(ifname):
         struct.pack('256s', ifname[:15])
     )[20:24])
 
-get_ip_address('eth0') 
 
-myip=get_ip_address('eth0')
+#get all the interfaces on the system 
+iflist=os.listdir('/sys/class/net/')
+
+for x in iflist:
+	print(x+': '+get_ip_address(x))
+
+#find which ip/interface to use for deployment servers
+whichint=''
+while whichint not in iflist:
+    whichint=raw_input('Which interface is on the deployment network for dhcp/pxe/etc?')
+myip=get_ip_address(whichint)
+
 #does /srv/install exist?
 if not os.path.exists('/srv/install'):
     os.makedirs('/srv/install')
 
-
-makex86 = raw_input('Do you wish to deploy x86_64 nodes from this server? (y or n)')
+makex86=''
+while makex86 not in ['y','n']:
+    makex86 = raw_input('Do you wish to deploy x86_64 nodes from this server? (y or n)')
 if makex86 == "y":
     if not os.path.exists('/srv/install/x86'):
         os.makedirs('/srv/install/x86/sles12/sp2/cd1')
@@ -35,6 +46,7 @@ if makex86 == "y":
 	quit()
     else:
         call(["mount", "-o", "loop", "/srv/www/htdocs/SLE-12-SP2-Server-DVD-x86_64-GM-DVD1.iso", "/srv/install/x86/sles12/sp2/cd1"])
+        # NEED TO ADD TO EXPORTS FILE IF NOT ALREADY THERE ***
 
 makearm = raw_input('Do you wish to deploy ARMv8 nodes from this server? (y or n)')
 if makearm == "y":
@@ -45,6 +57,7 @@ if makearm == "y":
 	quit()
     else:
         call(["mount", "-o", "loop", "/srv/www/htdocs/SLE-12-SP2-Server-DVD-aarch64-GM-DVD1.iso", "/srv/install/armv8/sles12/sp2/cd1"])
+        # NEED TO ADD TO EXPORTS FILE IF NOT ALREADY THERE ***
         
       
 
