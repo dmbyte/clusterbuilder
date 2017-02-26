@@ -65,6 +65,9 @@ runsmt = raw_input('Do you need to run SMT Configuration? (y or n)')
 if runsmt == "y" or runsmt == "yes":
     #launch smt wizard
     call(["yast2", "smt-wizard"])
+    smtip=myip
+else:
+    smtip=raw_input('Enter SMT server IP: ')
 
 #collect info needed to deploy dhcpd and others
 dodns=raw_input('Do we need to deploy a DNS server for this deployment? (y or n)')
