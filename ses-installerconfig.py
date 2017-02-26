@@ -4,14 +4,6 @@ import os.path
 #os.path.isfile
 #os.path.exists
 
-#create = f=open("filename.txt", "w+"))
-#read = f.open("filename.txt", "r")
-#append=f.open("filename.txt", "a+")
-#operations f.write
-#be sure to close it f.close()
-#is file open? if f.mode=='r':
-#contents=f.read() read into variable named contents
-#contents=f.readlines() read a line at a time
 # get the IP from eth0.  Eventually needs to offer a list of interfaces, but this is good for round 1
 import socket
 import fcntl
@@ -34,6 +26,15 @@ if not os.path.exists('/srv/install'):
     os.makedirs('/srv/install')
 
 
+makex86 = raw_input('Do you wish to deploy x86_64 nodes from this server? (y or n)')
+if makex86 == "y":
+    if not os.path.exists('/srv/install/x86'):
+        os.makedirs('/srv/install/x86/sles12/sp2/cd1')
+    if not os.path.exists('/srv/www/htdocs/SLE-12-SP2-Server-DVD-x86_64-GM-DVD1.iso'):
+        print('The ISO image for X86_64 needs to be located here:/srv/www/htdocs/SLE-12-SP2-Server-DVD-x86_64-GM-DVD1.iso')
+	quit()
+    else:
+        call(["mount", "-o", "loop", "/srv/www/htdocs/SLE-12-SP2-Server-DVD-x86_64-GM-DVD1.iso", "/srv/install/x86/sles12/sp2/cd1"])
 
 makearm = raw_input('Do you wish to deploy ARMv8 nodes from this server? (y or n)')
 if makearm == "y":
@@ -43,11 +44,10 @@ if makearm == "y":
         print('The ISO image for ARMv8 needs to be located here:/srv/www/htdocs/SLE-12-SP2-Server-DVD-aarch64-GM-DVD1.iso')
 	quit()
     else:
-        call(["mount", "-o loop /srv/www/htdocs/SLE-12-SP2-Server-DVD-aarch64-GM-DVD1.iso /srv/install/armv8/sles12/sp2/cd1"])
+        call(["mount", "-o", "loop", "/srv/www/htdocs/SLE-12-SP2-Server-DVD-aarch64-GM-DVD1.iso", "/srv/install/armv8/sles12/sp2/cd1"])
         
       
 
-#are ISOs present?  If not, mkdir and mount them
 runsmt = raw_input('Do you need to run SMT Configuration? (y or n)')
 if runsmt == "y" or runsmt == "yes":
     #launch smt wizard
@@ -96,7 +96,7 @@ if makex86=="y" and makearm=="y":
 if makex86=="n" and makearm=="y":
     f.write('   if option arch = 00:0b {\r\n')
     f.write('   filename "/EFI/armv8/bootaa64.efi";\r\n')
-if makex86==y and makearm=="n":
+if makex86=='y' and makearm=="n":
     f.write('  if option arch = 00:07 or option arch = 00:09 {\r\n')
 if makex86=="y":    
     f.write('   filename "/EFI/x86/bootx64.efi";\r\n')
@@ -120,7 +120,7 @@ if runnfs == 'y':
     exports=open("/etc/exports","w")
     exports.write('/srv/install  *(ro,root_squash,sync,no_subtree_check)')
     exports.close
-    call(["systemctl", "restart nfs-server.service"])
+    call(["systemctl", "restart", "nfs-server.service"])
 
 #write pxe message & grub.cfg files
 os.makedirs('/srv/tftpboot')
@@ -131,15 +131,15 @@ if makex86=="y":
     biosfilesrc='/srv/install/x86/sles12/sp2/cd1/boot/x86_64/loader/'
     for bfile in biosfiles:
         shutil.copy( biosfilesrc + bfile, '/srv/tftpboot/bios/x86/'+bfile)
-        ifmakearm=='y' and bfile <> 'message':
+        if makearm=='y' and bfile != 'message':
             shutil.copy(biosfilesrc+bfile, '/srv/tftpboot/EFI/x86/boot'+bfile)
     os.makedirs('/srv/tftpboot/bios/x86/pxelinux.cfg')
     
     shutil.copy('/usr/share/syslinux/pxelinux.0', '/srv/tftpboot/bios/x86/pxelinux.0')
-    default harddisk
 
     #write the default file for bios pxe clients
     pxedef=open('/srv/tftpboot/bios/x86/pxelinux.cfg/default','w')
+    pxedef.write('default harddisk')
     pxedef.write('# hard disk')
     pxedef.write('label harddisk')
     pxedef.write('  localboot -2')
@@ -175,15 +175,11 @@ if makex86=="y":
 
     grubfile=open('/srv/tftpboot/EFI/grub.cfg','a')
     grubfile.write('set timeout=5')
-    grubfile.write('menuentry 'Install SLES12 SP2 for x86_64' {')
+    grubfile.write('menuentry \'Install SLES12 SP2 for x86_64\' {')
     grubfile.write(' linuxefi /EFI/x86/boot/linux install=nfs://'+myip+'/srv/install/x86/sles12/sp2/cd1')
     grubfile.write(' initrdefi /EFI/x86/boot/initrd')
     grubfile.write('}')
     grubfile.close()
-
-
-
-
 
 if makearm=="y":
     os.makedirs('/srv/tftpboot/EFI/armv8/boot')
@@ -193,12 +189,10 @@ if makearm=="y":
     for armv8file in armv8files:
         shutil.copy( armv8filesrc + armv8file, '//srv/tftpboot/EFI/armv8/boot/'+armv8file)
 
-    grubfile=open('/srv/tftpboot/EFI/grub.cfg','a')')
-    grubfile.write('menuentry 'Install SLES12 SP2 for SoftIron OverDrive' {')
-    grubfile.write(' linux /EFI/armv8/boot/linux network=1 usessh=1 sshpassword="suse" \')
-    grubfile.write('   install=nfs://1'+myip+'/srv/install/armv8/sles12/sp2/cd1 \')
-    grubfile.write('   console=ttyAMA0,115200n8')
+    grubfile=open('/srv/tftpboot/EFI/grub.cfg','a')
+    grubfile.write('menuentry \'Install SLES12 SP2 for SoftIron OverDrive\' {')
+    grubfile.write(' linux /EFI/armv8/boot/linux network=1 usessh=1 sshpassword="suse" install=nfs://'+myip+'/srv/install/armv8/sles12/sp2/cd1 console=ttyAMA0,115200n8')
     grubfile.write(' initrd /EFI/armv8/boot/initrd')
     grubfile.write('}')
-
+    grubfile.close()
 #write/modify autoyast files
