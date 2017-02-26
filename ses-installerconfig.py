@@ -91,6 +91,12 @@ netmask=raw_input('Enter the netmask eg 255.255.255.0: ')
 rangestart=raw_input('Enter the first address in the DHCP range: ')
 rangestop=raw_input('Enter the last address in the DHCP range: ')
 
+osdprefix=raw_input('Enter the prefix to use for OSD node hostnames: ')
+monprefix=raw_input('Enter the prefix to use for Monitor node hostnames: ')
+igwprefix=raw_input('Enter the prefix to use for ISCSI Gateway node hostnames: ')
+rgwprefix=raw_input('Enter the prefix to use for RADOS Gateway node hostnames: ')
+mdsprefix=raw_input('Enter the prefix to use for Metadata Server node hostnames: ')
+
 #Write the dhcpd.conf
 f=open("/etc/dhcpd.conf", "w")
 f.write('option domain-name %s;\r\n'%domainname)
