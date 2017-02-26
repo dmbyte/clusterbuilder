@@ -131,8 +131,10 @@ if makex86=="y":
     biosfilesrc='/srv/install/x86/sles12/sp2/cd1/boot/x86_64/loader/'
     for bfile in biosfiles:
         shutil.copy( biosfilesrc + bfile, '/srv/tftpboot/bios/x86/'+bfile)
+        ifmakearm=='y' and bfile <> 'message':
+            shutil.copy(biosfilesrc+bfile, '/srv/tftpboot/EFI/x86/boot'+bfile)
     os.makedirs('/srv/tftpboot/bios/x86/pxelinux.cfg')
-    # need to copy in the pre-built default file here *******
+    
     shutil.copy('/usr/share/syslinux/pxelinux.0', '/srv/tftpboot/bios/x86/pxelinux.0')
     default harddisk
 
@@ -163,12 +165,40 @@ if makex86=="y":
     pxemsg.write('  install     - Installation')
     pxemsg.write(' ')
     pxemsg.write('Have a lot of fun...')
-    
+    pxemsg.close()
+
     #do the efi files
+    efix86files=['bootx64.efi', 'grub.efi', 'MokManager.efi']
+    efix86filesrc='/srv/install/x86/sles12/sp2/cd1/EFI/BOOT/'
+    for efix86file in efix86files:
+        shutil.copy( efix86filesrc + efix86file, '/srv/tftpboot/EFI/x86/'+efix86file)
+
+    grubfile=open('/srv/tftpboot/EFI/grub.cfg','a')
+    grubfile.write('set timeout=5')
+    grubfile.write('menuentry 'Install SLES12 SP2 for x86_64' {')
+    grubfile.write(' linuxefi /EFI/x86/boot/linux install=nfs://'+myip+'/srv/install/x86/sles12/sp2/cd1')
+    grubfile.write(' initrdefi /EFI/x86/boot/initrd')
+    grubfile.write('}')
+    grubfile.close()
+
+
+
 
 
 if makearm=="y":
     os.makedirs('/srv/tftpboot/EFI/armv8/boot')
+    shutil.copy( '/srv/install/armv8/sles12/sp2/cd1/EFI/BOOT/bootaa64.efi', '/srv/tftpboot/EFI/armv8/bootaa64.efi')
+    armv8files=['linux', 'initrd']
+    armv8filesrc='/srv/install/armv8/sles12/sp2/cd1/boot/aarch64/'
+    for armv8file in armv8files:
+        shutil.copy( armv8filesrc + armv8file, '//srv/tftpboot/EFI/armv8/boot/'+armv8file)
 
+    grubfile=open('/srv/tftpboot/EFI/grub.cfg','a')')
+    grubfile.write('menuentry 'Install SLES12 SP2 for SoftIron OverDrive' {')
+    grubfile.write(' linux /EFI/armv8/boot/linux network=1 usessh=1 sshpassword="suse" \')
+    grubfile.write('   install=nfs://1'+myip+'/srv/install/armv8/sles12/sp2/cd1 \')
+    grubfile.write('   console=ttyAMA0,115200n8')
+    grubfile.write(' initrd /EFI/armv8/boot/initrd')
+    grubfile.write('}')
 
 #write/modify autoyast files
