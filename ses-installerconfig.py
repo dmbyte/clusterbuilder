@@ -1,3 +1,4 @@
+
 from subprocess import call
 #call(["ls", "-l"])
 import os.path
@@ -10,6 +11,10 @@ import fcntl
 import struct
 import shutil
 
+def makepath(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+    
 def get_ip_address(ifname):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     return socket.inet_ntoa(fcntl.ioctl(
@@ -18,7 +23,7 @@ def get_ip_address(ifname):
         struct.pack('256s', ifname[:15])
     )[20:24])
 
-
+os.system('clear')
 #get all the interfaces on the system 
 iflist=os.listdir('/sys/class/net/')
 
@@ -32,32 +37,31 @@ while whichint not in iflist:
 myip=get_ip_address(whichint)
 
 #does /srv/install exist?
-if not os.path.exists('/srv/install'):
-    os.makedirs('/srv/install')
+makepath('/srv/install')
+    
 
 makex86=''
 while makex86 not in ['y','n']:
     makex86 = raw_input('Do you wish to deploy x86_64 nodes from this server? (y or n)')
 if makex86 == "y":
-    if not os.path.exists('/srv/install/x86'):
-        os.makedirs('/srv/install/x86/sles12/sp2/cd1')
+    
+    makepath('/srv/install/x86/sles12/sp2/cd1')
     if not os.path.exists('/srv/www/htdocs/SLE-12-SP2-Server-DVD-x86_64-GM-DVD1.iso'):
         print('The ISO image for X86_64 needs to be located here:/srv/www/htdocs/SLE-12-SP2-Server-DVD-x86_64-GM-DVD1.iso')
 	quit()
     else:
         call(["mount", "-o", "loop", "/srv/www/htdocs/SLE-12-SP2-Server-DVD-x86_64-GM-DVD1.iso", "/srv/install/x86/sles12/sp2/cd1"])
-        # NEED TO ADD TO EXPORTS FILE IF NOT ALREADY THERE ***
+        # NEED TO ADD TO fstab FILE IF NOT ALREADY THERE ***
 
 makearm = raw_input('Do you wish to deploy ARMv8 nodes from this server? (y or n)')
 if makearm == "y":
-    if not os.path.exists('/srv/install/armv8'):
-        os.makedirs('/srv/install/armv8/sles12/sp2/cd1')
+    makepath('/srv/install/armv8/sles12/sp2/cd1')
     if not os.path.exists('/srv/www/htdocs/SLE-12-SP2-Server-DVD-aarch64-GM-DVD1.iso'):
         print('The ISO image for ARMv8 needs to be located here:/srv/www/htdocs/SLE-12-SP2-Server-DVD-aarch64-GM-DVD1.iso')
 	quit()
     else:
         call(["mount", "-o", "loop", "/srv/www/htdocs/SLE-12-SP2-Server-DVD-aarch64-GM-DVD1.iso", "/srv/install/armv8/sles12/sp2/cd1"])
-        # NEED TO ADD TO EXPORTS FILE IF NOT ALREADY THERE ***
+        # NEED TO ADD TO fstab FILE IF NOT ALREADY THERE ***
         
       
 
@@ -145,17 +149,17 @@ if runnfs == 'y':
     call(["systemctl", "restart", "nfs-server.service"])
 
 #write pxe message & grub.cfg files
-os.makedirs('/srv/tftpboot')
+makepath('/srv/tftpboot')
 if makex86=="y":
-    os.makedirs('/srv/tftpboot/bios/x86')
-    os.makedirs('/srv/tftpboot/EFI/x86/boot')
+    makepath('/srv/tftpboot/bios/x86')
+    makepath('/srv/tftpboot/EFI/x86/boot')
     biosfiles=['linux', 'initrd', 'message']
     biosfilesrc='/srv/install/x86/sles12/sp2/cd1/boot/x86_64/loader/'
     for bfile in biosfiles:
         shutil.copy( biosfilesrc + bfile, '/srv/tftpboot/bios/x86/'+bfile)
         if makearm=='y' and bfile != 'message':
             shutil.copy(biosfilesrc+bfile, '/srv/tftpboot/EFI/x86/boot'+bfile)
-    os.makedirs('/srv/tftpboot/bios/x86/pxelinux.cfg')
+    makepath('/srv/tftpboot/bios/x86/pxelinux.cfg')
     
     shutil.copy('/usr/share/syslinux/pxelinux.0', '/srv/tftpboot/bios/x86/pxelinux.0')
 
@@ -204,7 +208,7 @@ if makex86=="y":
     grubfile.close()
 
 if makearm=="y":
-    os.makedirs('/srv/tftpboot/EFI/armv8/boot')
+    makepath('/srv/tftpboot/EFI/armv8/boot')
     shutil.copy( '/srv/install/armv8/sles12/sp2/cd1/EFI/BOOT/bootaa64.efi', '/srv/tftpboot/EFI/armv8/bootaa64.efi')
     armv8files=['linux', 'initrd']
     armv8filesrc='/srv/install/armv8/sles12/sp2/cd1/boot/aarch64/'
