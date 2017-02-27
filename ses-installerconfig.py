@@ -82,16 +82,18 @@ if dodns == "n":
     #systemctl enable named
     #write dns files
 
-domainname=raw_input('Enter the domain name for this deployment: ')
-defaultgw=raw_input('Enter the default gateway: ')
+
+
 amIntp=raw_input('Use this server as NTP server? (y or n)')
 if amIntp=="y":
     ntpserver = myip
 else:
     ntpserver=raw_input('Enter the NTP server address: ')
-
+print('DHCP Server Info')    
+domainname=raw_input('Enter the domain name for this deployment: ')
 subnetaddress=raw_input('Enter the subnet address. eg 192.168.124.0: ')
 netmask=raw_input('Enter the netmask eg 255.255.255.0: ')
+defaultgw=raw_input('Enter the default gateway: ')
 rangestart=raw_input('Enter the first address in the DHCP range: ')
 rangestop=raw_input('Enter the last address in the DHCP range: ')
 
