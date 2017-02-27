@@ -23,6 +23,15 @@ def get_ip_address(ifname):
         struct.pack('256s', ifname[:15])
     )[20:24])
 
+def fstabupdate(mntsrc,mntpath):
+    import mmap
+    fstab = open('/etc/fstab')
+    s = mmap.mmap(fstab.fileno(), 0, access=mmap.ACCESS_READ)
+    if not s.find('mntpath') != -1:
+        fstab.close()
+        fstab=open('/etc/fstab','a')
+        fstab.write(mntsrc+" "+mntpath+" iso9660 loop 0 0\r\n")
+
 os.system('clear')
 #get all the interfaces on the system 
 iflist=os.listdir('/sys/class/net/')
@@ -51,7 +60,8 @@ if makex86 == "y":
 	quit()
     else:
         call(["mount", "-o", "loop", "/srv/www/htdocs/SLE-12-SP2-Server-DVD-x86_64-GM-DVD1.iso", "/srv/install/x86/sles12/sp2/cd1"])
-        # NEED TO ADD TO fstab FILE IF NOT ALREADY THERE ***
+        fstabupdate('/srv/www/htdocs/SLE-12-SP2-Server-DVD-x86_64-GM-DVD1.iso','/srv/install/x86/sles12/sp2/cd1')
+        
 
 makearm = raw_input('Do you wish to deploy ARMv8 nodes from this server? (y or n)')
 if makearm == "y":
@@ -61,7 +71,7 @@ if makearm == "y":
 	quit()
     else:
         call(["mount", "-o", "loop", "/srv/www/htdocs/SLE-12-SP2-Server-DVD-aarch64-GM-DVD1.iso", "/srv/install/armv8/sles12/sp2/cd1"])
-        # NEED TO ADD TO fstab FILE IF NOT ALREADY THERE ***
+        fstabupdate('/srv/www/htdocs/SLE-12-SP2-Server-DVD-aarch64-GM-DVD1.iso','/srv/install/armv8/sles12/sp2/cd1')
         
       
 
@@ -146,7 +156,7 @@ runnfs = raw_input('We need NFS for the install source, run the configuration no
 if runnfs == 'y':
     call(["yast2", "nfs-server"])
     exports=open("/etc/exports","w")
-    exports.write('/srv/install  *(ro,root_squash,sync,no_subtree_check)')
+    exports.write('/srv/install  *(ro,root_squash,sync,no_subtree_check)\r\n')
     exports.close
     call(["systemctl", "restart", "nfs-server.service"])
 
