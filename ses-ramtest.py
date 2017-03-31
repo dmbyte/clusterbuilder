@@ -1,6 +1,9 @@
 #This app is intended to test and provide data to determine how much RAM is 
 #really needed in a Ceph node.
-#This requires cosbench & fio load generation workers
+#Author: David Byte
+
+#This requires cosbench & fio load generation workers.  I'm open to other 
+#suggestions. does rados bench produce a distribution of object sizes suitable for this?
 #prior to the test run, a check will be made of the ceph cluster to see if it is 
 #at 75% of capacity.  If not, the cluster will be populated using the COSbench 
 #workers to 85% with a mix of object sizes
