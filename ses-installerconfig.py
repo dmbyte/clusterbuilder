@@ -234,3 +234,9 @@ if makearm=="y":
     grubfile.write('}')
     grubfile.close()
 #write/modify autoyast files
+#   VLANs of phyiscally separate nets
+#        if VLAN, get VLAN IDs
+#   get what type of bond (802.3ad or mode-6)
+
+#   create bond with VLAN sub-interfaces
+#boot nodes
