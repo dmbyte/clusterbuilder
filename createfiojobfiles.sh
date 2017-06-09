@@ -1,4 +1,5 @@
 #!/bin/bash
+# goal is to work with http://louwrentius.com/creating-storage-benchmark-charts-with-fio-and-gnuplot.html
 # the filename line needs to be modified to fit your device/file used for testing.
 # it should be uniform on all nodes
 
