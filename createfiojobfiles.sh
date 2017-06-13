@@ -10,6 +10,7 @@ let "mylen2=$mylen - 1"
 rw=${i:$mylen2:1}
 bs=${i:0:$mylen2}
 echo [global] >$i.fio
+echo log_avg_msec=1 >$i.fio
 echo ioengine=aio >>$i.fio
 #if you want to use ioengine=rbd, then other options need to be added
 echo filename=/dev/sdb >>$i.fio
