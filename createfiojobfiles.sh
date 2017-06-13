@@ -11,7 +11,10 @@ rw=${i:$mylen2:1}
 bs=${i:0:$mylen2}
 echo [global] >$i.fio
 echo ioengine=aio >>$i.fio
+#if you want to use ioengine=rbd, then other options need to be added
 echo filename=/dev/sdb >>$i.fio
+#if using a file for filename instead of a device, you must issue size
+#echo size=100M >>$i.fio
 echo numjobs=1 >>$i.fio
 echo runtime=1200 >>$i.fio
 echo group_reporting=1 >>$i.fio

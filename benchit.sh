@@ -21,7 +21,7 @@ for g in $gseq; do
 done
 	echo "running $i "
 	fio $command >$i.out
-	fio2gnuplot -b -g -o $i-bw
+	fio2gnuplot -b -g -o $i
 	fio2gnuplot -i -g -o $i-iops
         mkdir archive
 	mv $i*.log archive
