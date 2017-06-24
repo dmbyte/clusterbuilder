@@ -28,7 +28,7 @@ fi
 	echo "running $i "
 	fio $command >$i.out
 	fio2gnuplot -b -g -o $i
-	fio2gnuplot -i -g -o $i-iops
+	fio2gnuplot -i -g -o $i
         mkdir archive
 	mv $i*.log archive
 done
