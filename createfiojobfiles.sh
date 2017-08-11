@@ -14,6 +14,7 @@ let "mylen2=$mylen - 1"
 rw=${i:$mylen2:1}
 bs=${i:0:$mylen2}
 echo [global] >$i.fio
+echo startdelay=60 >>$i.fio
 echo log_avg_msec=1 >>$i.fio
 echo ramp_time=300 >>$i.fio
 echo ioengine=aio >>$i.fio
@@ -30,9 +31,13 @@ echo runtime=1200 >>$i.fio
 echo time_based=1 >>$i.fio
 echo group_reporting=1 >>$i.fio
 echo per_job_logs=0 >>$i.fio
+echo unique_filename=0 >>$i.fio
+echo fill_buffers=1>>$i.fio
+echo norandommap=1>>$i.fio
+echo randrepeat=0>>$i.fio
 echo rw=$rw
 echo bs=$bs
-echo iodepth=16>>$i.fio
+echo iodepth=64>>$i.fio
 echo [$i]>>$i.fio
 if [ $rw = "r" ]
 then
