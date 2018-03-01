@@ -1,0 +1,21 @@
+#!/bin/bash
+part=`cat /etc/mtab |cut -f1 -d" "|grep dev|uniq|grep "/"|xargs|cut -f1 -d" "`
+part=${part#/dev/}
+disk=$(readlink /sys/class/block/$part)
+disk=${disk%/*}
+disk=${disk##*/}
+osdrive=$disk
+echo OS Drive=$osdrive
+for j in `ls /sys/block`
+do
+        if [ $j != $osdrive ]
+	then
+		echo "*** wiping $j ***"
+		
+                dd if=/dev/zero of=/dev/$j bs=1M count=1024 oflag=direct
+                sgdisk -Z -g /dev/$j
+	else
+		echo "*** OS drive skipped ***"
+	fi
+done
+
