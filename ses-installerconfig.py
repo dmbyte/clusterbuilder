@@ -10,6 +10,29 @@ import socket
 import fcntl
 import struct
 import shutil
+import array
+import sys
+
+def up_interfaces():
+    is_64bits = sys.maxsize > 2**32
+    struct_size = 40 if is_64bits else 32
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    max_possible = 8 # initial value
+    while True:
+        bytes = max_possible * struct_size
+        names = array.array('B', '\0' * bytes)
+        outbytes = struct.unpack('iL', fcntl.ioctl(
+            s.fileno(),
+            0x8912,  # SIOCGIFCONF
+            struct.pack('iL', bytes, names.buffer_info()[0])
+        ))[0]
+        if outbytes == bytes:
+            max_possible *= 2
+        else:
+            break
+    namestr = names.tostring()
+    return [(namestr[i:i+16].split('\0', 1)[0])
+            for i in range(0, outbytes, struct_size)]
 
 def makepath(path):
     if not os.path.exists(path):
@@ -34,7 +57,7 @@ def fstabupdate(mntsrc,mntpath):
 
 os.system('clear')
 #get all the interfaces on the system 
-iflist=os.listdir('/sys/class/net/')
+iflist=up_interfaces()
 
 for x in iflist:
 	print(x+': '+get_ip_address(x))
@@ -54,24 +77,24 @@ while makex86 not in ['y','n']:
     makex86 = raw_input('Do you wish to deploy x86_64 nodes from this server? (y or n)')
 if makex86 == "y":
     
-    makepath('/srv/install/x86/sles12/sp2/cd1')
-    if not os.path.exists('/srv/www/htdocs/SLE-12-SP2-Server-DVD-x86_64-GM-DVD1.iso'):
-        print('The ISO image for X86_64 needs to be located here:/srv/www/htdocs/SLE-12-SP2-Server-DVD-x86_64-GM-DVD1.iso')
+    makepath('/srv/install/x86/sles12/sp3/cd1')
+    if not os.path.exists('/srv/www/htdocs/SLE-12-SP3-Server-DVD-x86_64-GM-DVD1.iso'):
+        print('The ISO image for X86_64 needs to be located here:/srv/www/htdocs/SLE-12-SP3-Server-DVD-x86_64-GM-DVD1.iso')
 	quit()
     else:
-        call(["mount", "-o", "loop", "/srv/www/htdocs/SLE-12-SP2-Server-DVD-x86_64-GM-DVD1.iso", "/srv/install/x86/sles12/sp2/cd1"])
-        fstabupdate('/srv/www/htdocs/SLE-12-SP2-Server-DVD-x86_64-GM-DVD1.iso','/srv/install/x86/sles12/sp2/cd1')
+        call(["mount", "-o", "loop", "/srv/www/htdocs/SLE-12-SP3-Server-DVD-x86_64-GM-DVD1.iso", "/srv/install/x86/sles12/sp3/cd1"])
+        fstabupdate('/srv/www/htdocs/SLE-12-SP3-Server-DVD-x86_64-GM-DVD1.iso','/srv/install/x86/sles12/sp3/cd1')
         
 
 makearm = raw_input('Do you wish to deploy ARMv8 nodes from this server? (y or n)')
 if makearm == "y":
-    makepath('/srv/install/armv8/sles12/sp2/cd1')
-    if not os.path.exists('/srv/www/htdocs/SLE-12-SP2-Server-DVD-aarch64-GM-DVD1.iso'):
-        print('The ISO image for ARMv8 needs to be located here:/srv/www/htdocs/SLE-12-SP2-Server-DVD-aarch64-GM-DVD1.iso')
+    makepath('/srv/install/armv8/sles12/sp3/cd1')
+    if not os.path.exists('/srv/www/htdocs/SLE-12-SP3-Server-DVD-aarch64-GM-DVD1.iso'):
+        print('The ISO image for ARMv8 needs to be located here:/srv/www/htdocs/SLE-12-SP3-Server-DVD-aarch64-GM-DVD1.iso')
 	quit()
     else:
-        call(["mount", "-o", "loop", "/srv/www/htdocs/SLE-12-SP2-Server-DVD-aarch64-GM-DVD1.iso", "/srv/install/armv8/sles12/sp2/cd1"])
-        fstabupdate('/srv/www/htdocs/SLE-12-SP2-Server-DVD-aarch64-GM-DVD1.iso','/srv/install/armv8/sles12/sp2/cd1')
+        call(["mount", "-o", "loop", "/srv/www/htdocs/SLE-12-SP3-Server-DVD-aarch64-GM-DVD1.iso", "/srv/install/armv8/sles12/sp3/cd1"])
+        fstabupdate('/srv/www/htdocs/SLE-12-SP3-Server-DVD-aarch64-GM-DVD1.iso','/srv/install/armv8/sles12/sp3/cd1')
         
       
 
@@ -114,7 +137,7 @@ rgwprefix=raw_input('Enter the prefix to use for RADOS Gateway node hostnames: '
 mdsprefix=raw_input('Enter the prefix to use for Metadata Server node hostnames: ')
 
 #Write the dhcpd.conf
-f=open("/etc/dhcpd.conf", "w")
+f=open("/etc/dhcpd.conf", "wb")
 f.write('option domain-name %s;\r\n'%domainname)
 f.write('option domain-name-servers %s;\r\n'%dns1ip)
 f.write('option routers %s;\r\n'%defaultgw)
@@ -155,8 +178,8 @@ if runtftp == "y":
 runnfs = raw_input('We need NFS for the install source, run the configuration now? (y or n) ')
 if runnfs == 'y':
     call(["yast2", "nfs-server"])
-    exports=open("/etc/exports","w")
-    exports.write('/srv/install  *(ro,root_squash,sync,no_subtree_check)\r\n')
+    exports=open("/etc/exports","wb")
+    exports.write('/srv/install  *(ro,root_squash,sync,no_subtree_check,crossmnt)\r\n')
     exports.close
     call(["systemctl", "restart", "nfs-server.service"])
 
@@ -166,7 +189,7 @@ if makex86=="y":
     makepath('/srv/tftpboot/bios/x86')
     makepath('/srv/tftpboot/EFI/x86/boot')
     biosfiles=['linux', 'initrd', 'message']
-    biosfilesrc='/srv/install/x86/sles12/sp2/cd1/boot/x86_64/loader/'
+    biosfilesrc='/srv/install/x86/sles12/sp3/cd1/boot/x86_64/loader/'
     for bfile in biosfiles:
         shutil.copy( biosfilesrc + bfile, '/srv/tftpboot/bios/x86/'+bfile)
         if makearm=='y' and bfile != 'message':
@@ -176,7 +199,7 @@ if makex86=="y":
     shutil.copy('/usr/share/syslinux/pxelinux.0', '/srv/tftpboot/bios/x86/pxelinux.0')
 
     #write the default file for bios pxe clients
-    pxedef=open('/srv/tftpboot/bios/x86/pxelinux.cfg/default','w')
+    pxedef=open('/srv/tftpboot/bios/x86/pxelinux.cfg/default','wb')
     pxedef.write('default harddisk')
     pxedef.write('# hard disk')
     pxedef.write('label harddisk')
@@ -184,7 +207,7 @@ if makex86=="y":
     pxedef.write('# install')
     pxedef.write('label install')
     pxedef.write('  kernel linux')
-    pxedef.write('  append initrd=initrd showopts install=nfs://'+myip+'/srv/install/x86/sles12/sp2/cd1')
+    pxedef.write('  append initrd=initrd showopts install=nfs://'+myip+'/srv/install/x86/sles12/sp3/cd1')
 
     pxedef.write('display message')
     pxedef.write('implicit 0')
@@ -193,7 +216,7 @@ if makex86=="y":
     pxedef.close()
     
     #write the message file
-    pxemsg=open('/srv/tftpboot/bios/x86/message','w')
+    pxemsg=open('/srv/tftpboot/bios/x86/message','wb')
     pxemsg.write('                             Welcome to the Installer Environment! ')
     pxemsg.write(' ')
     pxemsg.write('To start the installation enter install and press <return>.')
@@ -207,29 +230,29 @@ if makex86=="y":
 
     #do the efi files
     efix86files=['bootx64.efi', 'grub.efi', 'MokManager.efi']
-    efix86filesrc='/srv/install/x86/sles12/sp2/cd1/EFI/BOOT/'
+    efix86filesrc='/srv/install/x86/sles12/sp3/cd1/EFI/BOOT/'
     for efix86file in efix86files:
         shutil.copy( efix86filesrc + efix86file, '/srv/tftpboot/EFI/x86/'+efix86file)
 
-    grubfile=open('/srv/tftpboot/EFI/grub.cfg','a')
+    grubfile=open('/srv/tftpboot/EFI/grub.cfg','ab')
     grubfile.write('set timeout=5')
-    grubfile.write('menuentry \'Install SLES12 SP2 for x86_64\' {')
-    grubfile.write(' linuxefi /EFI/x86/boot/linux install=nfs://'+myip+'/srv/install/x86/sles12/sp2/cd1')
+    grubfile.write('menuentry \'Install SLES12 SP3 for x86_64\' {')
+    grubfile.write(' linuxefi /EFI/x86/boot/linux install=nfs://'+myip+'/srv/install/x86/sles12/sp3/cd1')
     grubfile.write(' initrdefi /EFI/x86/boot/initrd')
     grubfile.write('}')
     grubfile.close()
 
 if makearm=="y":
     makepath('/srv/tftpboot/EFI/armv8/boot')
-    shutil.copy( '/srv/install/armv8/sles12/sp2/cd1/EFI/BOOT/bootaa64.efi', '/srv/tftpboot/EFI/armv8/bootaa64.efi')
+    shutil.copy( '/srv/install/armv8/sles12/sp3/cd1/EFI/BOOT/bootaa64.efi', '/srv/tftpboot/EFI/armv8/bootaa64.efi')
     armv8files=['linux', 'initrd']
-    armv8filesrc='/srv/install/armv8/sles12/sp2/cd1/boot/aarch64/'
+    armv8filesrc='/srv/install/armv8/sles12/sp3/cd1/boot/aarch64/'
     for armv8file in armv8files:
         shutil.copy( armv8filesrc + armv8file, '//srv/tftpboot/EFI/armv8/boot/'+armv8file)
 
-    grubfile=open('/srv/tftpboot/EFI/grub.cfg','a')
-    grubfile.write('menuentry \'Install SLES12 SP2 for SoftIron OverDrive\' {')
-    grubfile.write(' linux /EFI/armv8/boot/linux network=1 usessh=1 sshpassword="suse" install=nfs://'+myip+'/srv/install/armv8/sles12/sp2/cd1 console=ttyAMA0,115200n8')
+    grubfile=open('/srv/tftpboot/EFI/grub.cfg','ab')
+    grubfile.write('menuentry \'Install SLES12 SP3 for SoftIron OverDrive\' {')
+    grubfile.write(' linux /EFI/armv8/boot/linux network=1 usessh=1 sshpassword="suse" install=nfs://'+myip+'/srv/install/armv8/sles12/sp3/cd1 console=ttyAMA0,115200n8')
     grubfile.write(' initrd /EFI/armv8/boot/initrd')
     grubfile.write('}')
     grubfile.close()
