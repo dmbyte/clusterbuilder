@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for i in `cat allnodes.lst`;
+for i in `cat cluster.lst`;
 do
 ssh root@$i "systemctl stop salt-minion"
 ssh root@$i "systemctl stop salt-master"

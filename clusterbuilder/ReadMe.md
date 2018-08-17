@@ -18,10 +18,7 @@ Proper use is to copy the two .sh and one .sh.src file to the /root/ directory
 on the admin node AFTER the OS is installed.
 
 To use these scripts, create 3 files
- - allnodes.lst
-    --  This file contains a list of all nodes in the cluster and any extra nodes
-        that you may want to use salt to control
-
+ 
  - osdnodes.lst
     --  A list of the resolvable names of all OSD nodes
 
