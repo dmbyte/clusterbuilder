@@ -33,6 +33,7 @@ ssh root@$i "rm -rf /srv/spm"
 ssh root@$i "rm -rf /var/lib/ceph"
 ssh root@$i "rm -rf /var/lib/salt"
 ssh root@$i "rm -rf /var/lib/prometheus"
+ssh root@$i "rm -rf /var/cache/salt"
 
 ssh root@$i "rm -f /etc/sysconfig/prometheus-node_exporter"
 ssh root@$i "rm -f /etc/cron.hourly/prometheus-smartmon-exporter.sh"
