@@ -53,7 +53,7 @@ def fstabupdate(mntsrc,mntpath):
     if not s.find('mntpath') != -1:
         fstab.close()
         fstab=open('/etc/fstab','a')
-        fstab.write(mntsrc+" "+mntpath+" iso9660 loop 0 0\r\n")
+        fstab.write(mntsrc+" "+mntpath+" iso9660 loop 0 0\n")
 
 os.system('clear')
 #get all the interfaces on the system 
@@ -137,36 +137,39 @@ rgwprefix=raw_input('Enter the prefix to use for RADOS Gateway node hostnames: '
 mdsprefix=raw_input('Enter the prefix to use for Metadata Server node hostnames: ')
 
 #Write the dhcpd.conf
+call(["zypper","in","-y","dhcp-server"])
+call(["systemctl","enable","dhcpd"])
 f=open("/etc/dhcpd.conf", "wb")
-f.write('option domain-name %s;\r\n'%domainname)
-f.write('option domain-name-servers %s;\r\n'%dns1ip)
-f.write('option routers %s;\r\n'%defaultgw)
-f.write('option ntp-servers %s;\r\n'%ntpserver)
-f.write('option arch code 93 = unsigned integer 16; # RFC4578\r\n')
-f.write('default-lease-time 3600;\r\n')
-f.write('ddns-update-style none;\r\n')
-f.write('subnet %s netmask %s {\r\n'%(subnetaddress, netmask))
-f.write('  range %s %s;\r\n'%(rangestart, rangestop))
-f.write('  next-server %s;\r\n'%myip)
-f.write('  default-lease-time 3600;\r\n')
-f.write('  max-lease-time 3600;\r\n')
+f.write('option domain-name "%s";\n'%domainname)
+f.write('option domain-name-servers %s;\n'%dns1ip)
+f.write('option routers %s;\n'%defaultgw)
+f.write('option ntp-servers %s;\n'%ntpserver)
+f.write('option arch code 93 = unsigned integer 16; # RFC4578\n')
+f.write('default-lease-time 3600;\n')
+f.write('ddns-update-style none;\n')
+f.write('subnet %s netmask %s {\n'%(subnetaddress, netmask))
+f.write('  range %s %s;\n'%(rangestart, rangestop))
+f.write('  next-server %s;\n'%myip)
+f.write('  default-lease-time 3600;\n')
+f.write('  max-lease-time 3600;\n')
 if makex86=="y" and makearm=="y":
-    f.write('   if option arch = 00:0b {\r\n')
-    f.write('   filename "/EFI/armv8/bootaa64.efi";\r\n')
-    f.write('  } else if option arch = 00:07 or option arch = 00:09 {\r\n')
+    f.write('   if option arch = 00:0b {\n')
+    f.write('   filename "/EFI/armv8/bootaa64.efi";\n')
+    f.write('  } else if option arch = 00:07 or option arch = 00:09 {\n')
 if makex86=="n" and makearm=="y":
-    f.write('   if option arch = 00:0b {\r\n')
-    f.write('   filename "/EFI/armv8/bootaa64.efi";\r\n')
+    f.write('   if option arch = 00:0b {\n')
+    f.write('   filename "/EFI/armv8/bootaa64.efi";\n')
 if makex86=='y' and makearm=="n":
-    f.write('  if option arch = 00:07 or option arch = 00:09 {\r\n')
+    f.write('  if option arch = 00:07 or option arch = 00:09 {\n')
 if makex86=="y":    
-    f.write('   filename "/EFI/x86/bootx64.efi";\r\n')
-    f.write('    } else {\r\n')
-    f.write('   filename "/bios/x86/pxelinux.0";\r\n')
-f.write('    }\r\n')
-f.write('}\r\n')
+    f.write('   filename "/EFI/x86/bootx64.efi";\n')
+    f.write('    } else {\n')
+    f.write('   filename "/bios/x86/pxelinux.0";\n')
+f.write('    }\n')
+f.write('}\n')
 f.close
-
+call(["yast2","dhcp-server"])
+call(["systemctl","start","dhcpd"])
 #make sure tftp is setup
 #should figure out if it is already present and enabled, maybe check /etc/xinetd.d/tftpd
 runtftp = raw_input('Do you need to run TFTP Configuration? (y or n)')
@@ -179,9 +182,10 @@ runnfs = raw_input('We need NFS for the install source, run the configuration no
 if runnfs == 'y':
     call(["yast2", "nfs-server"])
     exports=open("/etc/exports","wb")
-    exports.write('/srv/install  *(ro,root_squash,sync,no_subtree_check,crossmnt)\r\n')
+    exports.write('/srv/install  *(ro,root_squash,sync,no_subtree_check,crossmnt)\n')
     exports.close
     call(["systemctl", "restart", "nfs-server.service"])
+    call(["exportfs","-a"])
 
 #write pxe message & grub.cfg files
 makepath('/srv/tftpboot')
@@ -195,37 +199,38 @@ if makex86=="y":
         if makearm=='y' and bfile != 'message':
             shutil.copy(biosfilesrc+bfile, '/srv/tftpboot/EFI/x86/boot'+bfile)
     makepath('/srv/tftpboot/bios/x86/pxelinux.cfg')
+    makepath('/usr/share/syslinux')
     
     shutil.copy('/usr/share/syslinux/pxelinux.0', '/srv/tftpboot/bios/x86/pxelinux.0')
 
     #write the default file for bios pxe clients
     pxedef=open('/srv/tftpboot/bios/x86/pxelinux.cfg/default','wb')
-    pxedef.write('default harddisk')
-    pxedef.write('# hard disk')
-    pxedef.write('label harddisk')
+    pxedef.write('default harddisk\n')
+    pxedef.write('# hard disk\n')
+    pxedef.write('label harddisk\n')
     pxedef.write('  localboot -2')
-    pxedef.write('# install')
-    pxedef.write('label install')
-    pxedef.write('  kernel linux')
-    pxedef.write('  append initrd=initrd showopts install=nfs://'+myip+'/srv/install/x86/sles12/sp3/cd1')
+    pxedef.write('# install\n')
+    pxedef.write('label install\n')
+    pxedef.write('  kernel linux\n')
+    pxedef.write('  append initrd=initrd showopts install=nfs://'+myip+'/srv/install/x86/sles12/sp3/cd1\n')
 
-    pxedef.write('display message')
-    pxedef.write('implicit 0')
-    pxedef.write('prompt 1')
-    pxedef.write('timeout 600')
+    pxedef.write('display message\n')
+    pxedef.write('implicit 0\n')
+    pxedef.write('prompt 1\n')
+    pxedef.write('timeout 600\n')
     pxedef.close()
     
     #write the message file
     pxemsg=open('/srv/tftpboot/bios/x86/message','wb')
-    pxemsg.write('                             Welcome to the Installer Environment! ')
-    pxemsg.write(' ')
-    pxemsg.write('To start the installation enter install and press <return>.')
-    pxemsg.write(' ')
-    pxemsg.write('Available boot options:')
-    pxemsg.write('  harddisk   - Boot from Hard Disk (this is default)')
-    pxemsg.write('  install     - Installation')
-    pxemsg.write(' ')
-    pxemsg.write('Have a lot of fun...')
+    pxemsg.write('                             Welcome to the Installer Environment! \n')
+    pxemsg.write(' \n')
+    pxemsg.write('To start the installation enter install and press <return>.\n')
+    pxemsg.write(' \n')
+    pxemsg.write('Available boot options:\n')
+    pxemsg.write('  harddisk   - Boot from Hard Disk (this is default)\n')
+    pxemsg.write('  install     - Installation\n')
+    pxemsg.write(' \n')
+    pxemsg.write('Have a lot of fun...\n')
     pxemsg.close()
 
     #do the efi files
@@ -234,12 +239,12 @@ if makex86=="y":
     for efix86file in efix86files:
         shutil.copy( efix86filesrc + efix86file, '/srv/tftpboot/EFI/x86/'+efix86file)
 
-    grubfile=open('/srv/tftpboot/EFI/grub.cfg','ab')
-    grubfile.write('set timeout=5')
-    grubfile.write('menuentry \'Install SLES12 SP3 for x86_64\' {')
-    grubfile.write(' linuxefi /EFI/x86/boot/linux install=nfs://'+myip+'/srv/install/x86/sles12/sp3/cd1')
-    grubfile.write(' initrdefi /EFI/x86/boot/initrd')
-    grubfile.write('}')
+    grubfile=open('/srv/tftpboot/EFI/x86/grub.cfg','ab')
+    grubfile.write('set timeout=5\n')
+    grubfile.write('menuentry \'Install SLES12 SP3 for x86_64\' {\n')
+    grubfile.write(' linuxefi /EFI/x86/boot/linux install=nfs://'+myip+'/srv/install/x86/sles12/sp3/cd1\n')
+    grubfile.write(' initrdefi /EFI/x86/boot/initrd\n')
+    grubfile.write('}\n')
     grubfile.close()
 
 if makearm=="y":
@@ -250,11 +255,11 @@ if makearm=="y":
     for armv8file in armv8files:
         shutil.copy( armv8filesrc + armv8file, '//srv/tftpboot/EFI/armv8/boot/'+armv8file)
 
-    grubfile=open('/srv/tftpboot/EFI/grub.cfg','ab')
-    grubfile.write('menuentry \'Install SLES12 SP3 for SoftIron OverDrive\' {')
-    grubfile.write(' linux /EFI/armv8/boot/linux network=1 usessh=1 sshpassword="suse" install=nfs://'+myip+'/srv/install/armv8/sles12/sp3/cd1 console=ttyAMA0,115200n8')
-    grubfile.write(' initrd /EFI/armv8/boot/initrd')
-    grubfile.write('}')
+    grubfile=open('/srv/tftpboot/EFI/armv8/grub.cfg','ab')
+    grubfile.write('menuentry \'Install SLES12 SP3 for Overdrive\' {\n')
+    grubfile.write(' linux /EFI/armv8/boot/linux network=1 usessh=1 sshpassword="suse" install=nfs://'+myip+'/srv/install/armv8/sles12/sp3/cd1 console=ttyAMA0,115200n8\n')
+    grubfile.write(' initrd /EFI/armv8/boot/initrd\n')
+    grubfile.write('}\n')
     grubfile.close()
 #write/modify autoyast files
 #   VLANs of phyiscally separate nets
