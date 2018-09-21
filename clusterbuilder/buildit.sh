@@ -19,7 +19,7 @@ if [ ! -f osdnodes.lst ];then
         echo "   The file should contain a list of all the osd nodes with one"
         echo "   per line."
         exit
-
+fi
 #check name resolution for all nodes
 for m in `cat cluster.lst`
 do
@@ -62,7 +62,7 @@ export DEV_ENV=true
 echo "*** Installing and starting salt on admin node ***"
 zypper in -y salt-master
 myname=`hostname`
-echo master:$myname >/etc/salt/minion
+echo master: $myname >/etc/salt/minion
 systemctl enable salt-master.service
 systemctl start salt-master.service
 zypper in -y salt-minion
@@ -71,7 +71,7 @@ systemctl start salt-minion.service
 echo "*** Installing and starting salt on cluster nodes ***"
 for n in `cat cluster.lst`;
 do
-	ssh root@$n "zypper in -y salt-minion;echo master:$myname >/etc/salt/minion;systemctl enable salt-minion.service;systemctl start salt-minion.service"
+	ssh root@$n "zypper in -y salt-minion;echo master: $myname >/etc/salt/minion;systemctl enable salt-minion.service;systemctl start salt-minion.service"
 done
 echo "*** Letting things settle for 30 seconds ***"
 sleep 30s
