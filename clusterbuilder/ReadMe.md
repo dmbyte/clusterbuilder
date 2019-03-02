@@ -24,6 +24,11 @@ To use these scripts, create 3 files
 
  - cluster.lst
     -- A list of all the nodes in the cluster (Monitors, gateways, admin, OSDs, etc)
+    
+ - /root/policy.cfg
+    -- the policy.cfg file you wish to use for deployments
+    
+ You also need to edit the buildit script to fix the profile generation for DeepSea
 
 After creating the three files, simply run the buildit.sh script.
 
