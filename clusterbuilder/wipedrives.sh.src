@@ -11,11 +11,15 @@ do
         if [ $j != $osdrive ]
 	then
 		echo "*** wiping $j ***"
-		
-                dd if=/dev/zero of=/dev/$j bs=1M count=1024 oflag=direct
-                sgdisk -Z -g /dev/$j
+
+                (echo $j >/tmp/$j.bench;dd if=/dev/zero of=/dev/$j bs=2M count=10240 oflag=direct;sgdisk -Z -g /dev/$j;mkfs.xfs -f /dev/$j;dd if=/dev/zero of=/dev/$j bs=2M count=1024 oflag=direct;sgdisk -Z -g /dev/$j;rm -f /tmp/$j.bench) &
 	else
 		echo "*** OS drive skipped ***"
 	fi
 done
-
+while [ `ls /tmp/*.bench|wc -l` -gt 0 ];
+do
+	echo -n "."
+	sleep 30s
+done
+echo ""
