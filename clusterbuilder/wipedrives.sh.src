@@ -12,7 +12,7 @@ do
 	then
 		echo "*** wiping $j ***"
 
-                (echo $j >/tmp/$j.bench;dd if=/dev/zero of=/dev/$j bs=2M count=10240 oflag=direct;sgdisk -Z -g /dev/$j;mkfs.xfs -f /dev/$j;dd if=/dev/zero of=/dev/$j bs=2M count=1024 oflag=direct;sgdisk -Z -g /dev/$j;rm -f /tmp/$j.bench) &
+                (echo $j >/tmp/$j.bench;dd if=/dev/zero of=/dev/$j bs=1M count=10240 oflag=direct 2>/dev/null;sgdisk -Z -g /dev/$j 2>/dev/null;mkfs.xfs -f /dev/$j 2>/dev/null;dd if=/dev/zero of=/dev/$j bs=1M count=1024 oflag=direct 2>/dev/null;sgdisk -Z -g /dev/$j 2>/dev/null;rm -f /tmp/$j.bench) &
 	else
 		echo "*** OS drive skipped ***"
 	fi
