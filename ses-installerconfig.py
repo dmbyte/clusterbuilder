@@ -77,24 +77,24 @@ while makex86 not in ['y','n']:
     makex86 = raw_input('Do you wish to deploy x86_64 nodes from this server? (y or n)')
 if makex86 == "y":
     
-    makepath('/srv/install/x86/sles12/sp3/cd1')
-    if not os.path.exists('/srv/www/htdocs/SLE-12-SP3-Server-DVD-x86_64-GM-DVD1.iso'):
-        print('The ISO image for X86_64 needs to be located here:/srv/www/htdocs/SLE-12-SP3-Server-DVD-x86_64-GM-DVD1.iso')
+    makepath('/srv/install/x86/sles15/sp1/cd1')
+    if not os.path.exists('/srv/www/htdocs/SLE-15-SP1-Installer-DVD-x86_64-GM-DVD1'):
+        print('The ISO image for X86_64 needs to be located here:/srv/www/htdocs/SSLE-15-SP1-Installer-DVD-x86_64-GM-DVD1.iso')
 	quit()
     else:
-        call(["mount", "-o", "loop", "/srv/www/htdocs/SLE-12-SP3-Server-DVD-x86_64-GM-DVD1.iso", "/srv/install/x86/sles12/sp3/cd1"])
-        fstabupdate('/srv/www/htdocs/SLE-12-SP3-Server-DVD-x86_64-GM-DVD1.iso','/srv/install/x86/sles12/sp3/cd1')
+        call(["mount", "-o", "loop", "/srv/www/htdocs/SLE-15-SP1-Installer-DVD-x86_64-GM-DVD1.iso", "/srv/install/x86/sles15/sp1/cd1"])
+        fstabupdate('/srv/www/htdocs/SSLE-15-SP1-Installer-DVD-x86_64-GM-DVD1.iso','/srv/install/x86/sles15/sp1/cd1')
         
 
 makearm = raw_input('Do you wish to deploy ARMv8 nodes from this server? (y or n)')
 if makearm == "y":
-    makepath('/srv/install/armv8/sles12/sp3/cd1')
-    if not os.path.exists('/srv/www/htdocs/SLE-12-SP3-Server-DVD-aarch64-GM-DVD1.iso'):
-        print('The ISO image for ARMv8 needs to be located here:/srv/www/htdocs/SLE-12-SP3-Server-DVD-aarch64-GM-DVD1.iso')
+    makepath('/srv/install/armv8/sles15/sp1/cd1')
+    if not os.path.exists('/srv/www/htdocs/SLE-15-SP1-Installer-DVD-aarch-GM-DVD1.iso'):
+        print('The ISO image for ARMv8 needs to be located here:/srv/www/htdocs/SLE-15-SP1-Installer-DVD-x86_64-GM-DVD1.iso')
 	quit()
     else:
-        call(["mount", "-o", "loop", "/srv/www/htdocs/SLE-12-SP3-Server-DVD-aarch64-GM-DVD1.iso", "/srv/install/armv8/sles12/sp3/cd1"])
-        fstabupdate('/srv/www/htdocs/SLE-12-SP3-Server-DVD-aarch64-GM-DVD1.iso','/srv/install/armv8/sles12/sp3/cd1')
+        call(["mount", "-o", "loop", "/srv/www/htdocs/SLE-15-SP1-Installer-DVD-aarch-GM-DVD1.iso", "/srv/install/armv8/sles15/sp1/cd1"])
+        fstabupdate('/srv/www/htdocs/SLE-15-SP1-Installer-DVD-aarch-GM-DVD1.iso','/srv/install/armv8/sles15/sp1/cd1')
         
       
 
@@ -104,7 +104,7 @@ if runsmt == "y" or runsmt == "yes":
     call(["yast2", "smt-wizard"])
     smtip=myip
 else:
-    smtip=raw_input('Enter SMT server IP: ')
+    smtip=raw_input('Enter SMT/RMT server IP: ')
 
 #collect info needed to deploy dhcpd and others
 dodns=raw_input('Do we need to deploy a DNS server for this deployment? (y or n)')
@@ -193,7 +193,7 @@ if makex86=="y":
     makepath('/srv/tftpboot/bios/x86')
     makepath('/srv/tftpboot/EFI/x86/boot')
     biosfiles=['linux', 'initrd', 'message']
-    biosfilesrc='/srv/install/x86/sles12/sp3/cd1/boot/x86_64/loader/'
+    biosfilesrc='/srv/install/x86/sles15/sp1/cd1/boot/x86_64/loader/'
     for bfile in biosfiles:
         shutil.copy( biosfilesrc + bfile, '/srv/tftpboot/bios/x86/'+bfile)
         if makearm=='y' and bfile != 'message':
@@ -235,29 +235,29 @@ if makex86=="y":
 
     #do the efi files
     efix86files=['bootx64.efi', 'grub.efi', 'MokManager.efi']
-    efix86filesrc='/srv/install/x86/sles12/sp3/cd1/EFI/BOOT/'
+    efix86filesrc='/srv/install/x86/sles15/sp1/cd1/EFI/BOOT/'
     for efix86file in efix86files:
         shutil.copy( efix86filesrc + efix86file, '/srv/tftpboot/EFI/x86/'+efix86file)
 
     grubfile=open('/srv/tftpboot/EFI/x86/grub.cfg','ab')
     grubfile.write('set timeout=5\n')
-    grubfile.write('menuentry \'Install SLES12 SP3 for x86_64\' {\n')
-    grubfile.write(' linuxefi /EFI/x86/boot/linux install=nfs://'+myip+'/srv/install/x86/sles12/sp3/cd1\n')
+    grubfile.write('menuentry \'Install SLES15 SP1 for x86_64\' {\n')
+    grubfile.write(' linuxefi /EFI/x86/boot/linux install=nfs://'+myip+'/srv/install/x86/sles15/sp1/cd1\n')
     grubfile.write(' initrdefi /EFI/x86/boot/initrd\n')
     grubfile.write('}\n')
     grubfile.close()
 
 if makearm=="y":
     makepath('/srv/tftpboot/EFI/armv8/boot')
-    shutil.copy( '/srv/install/armv8/sles12/sp3/cd1/EFI/BOOT/bootaa64.efi', '/srv/tftpboot/EFI/armv8/bootaa64.efi')
+    shutil.copy( '/srv/install/armv8/sles15/sp1/cd1/EFI/BOOT/bootaa64.efi', '/srv/tftpboot/EFI/armv8/bootaa64.efi')
     armv8files=['linux', 'initrd']
-    armv8filesrc='/srv/install/armv8/sles12/sp3/cd1/boot/aarch64/'
+    armv8filesrc='/srv/install/armv8/sles15/sp1/cd1/boot/aarch64/'
     for armv8file in armv8files:
         shutil.copy( armv8filesrc + armv8file, '//srv/tftpboot/EFI/armv8/boot/'+armv8file)
 
     grubfile=open('/srv/tftpboot/EFI/armv8/grub.cfg','ab')
-    grubfile.write('menuentry \'Install SLES12 SP3 for Overdrive\' {\n')
-    grubfile.write(' linux /EFI/armv8/boot/linux network=1 usessh=1 sshpassword="suse" install=nfs://'+myip+'/srv/install/armv8/sles12/sp3/cd1 console=ttyAMA0,115200n8\n')
+    grubfile.write('menuentry \'Install SLES15 SP1 for Overdrive\' {\n')
+    grubfile.write(' linux /EFI/armv8/boot/linux network=1 usessh=1 sshpassword="suse" install=nfs://'+myip+'/srv/install/armv8/sles15/sp1/cd1 console=ttyAMA0,115200n8\n')
     grubfile.write(' initrd /EFI/armv8/boot/initrd\n')
     grubfile.write('}\n')
     grubfile.close()
