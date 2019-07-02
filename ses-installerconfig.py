@@ -212,7 +212,7 @@ if makex86=="y":
     pxedef.write('# install\n')
     pxedef.write('label install\n')
     pxedef.write('  kernel linux\n')
-    pxedef.write('  append initrd=initrd showopts install=nfs://'+myip+'/srv/install/x86/sles12/sp3/cd1\n')
+    pxedef.write('  append initrd=initrd showopts install=nfs://'+myip+'/srv/install/x86/sles15/sp1/cd1\n')
 
     pxedef.write('display message\n')
     pxedef.write('implicit 0\n')
