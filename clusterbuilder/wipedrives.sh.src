@@ -8,18 +8,69 @@ osdrive=$disk
 echo OS Drive=$osdrive
 for j in `ls /sys/block`
 do
+	unset pids
+	i=1
         if [ $j != $osdrive ]
 	then
 		echo "*** wiping $j ***"
-
-                (echo $j >/tmp/$j.bench;dd if=/dev/zero of=/dev/$j bs=1M count=10240 oflag=direct 2>/dev/null;sgdisk -Z -g /dev/$j 2>/dev/null;mkfs.xfs -f /dev/$j 2>/dev/null;dd if=/dev/zero of=/dev/$j bs=1M count=1024 oflag=direct 2>/dev/null;sgdisk -Z -g /dev/$j 2>/dev/null;rm -f /tmp/$j.bench) &
+		
+                dd if=/dev/zero of=/dev/$j bs=1M count=1024 oflag=direct &
+		pids[${i}]=$!
+		let i++
 	else
 		echo "*** OS drive skipped ***"
 	fi
 done
-while [ `ls /tmp/*.bench|wc -l` -gt 0 ];
+echo "Waiting for completion of nuking 1GB write to drives"
+wait 
+for j in `ls /sys/block`
 do
-	echo -n "."
-	sleep 30s
+	unset pids
+	i=1
+        if [ $j != $osdrive ]
+	then
+		echo "*** wiping $j ***"
+		
+                sgdisk -Z -g /dev/$j &
+		pids[${i}]=$!
+		let i++
+	else
+		echo "*** OS drive skipped ***"
+	fi
 done
-echo ""
+echo "Waiting for completion of nuking disk labels"
+wait 
+for j in `ls /sys/block`
+do
+	unset pids
+	i=1
+        if [ $j != $osdrive ]
+	then
+		echo "*** wiping $j ***"
+		
+		dd if=/dev/zero of=/dev/$j bs=512 count=34 oflag=direct &
+		pids[${i}]=$!
+		let i++
+	else
+		echo "*** OS drive skipped ***"
+	fi
+done
+echo "Waiting for completion of beginning of drive wipe"
+wait
+for j in `ls /sys/block`
+do
+	unset $pids
+	i=1
+        if [ $j != $osdrive ]
+	then
+		echo "*** wiping $j ***"
+		
+		dd if=/dev/zero of=/dev/$j bs=512 count=33 seek=$((`blockdev --getsz /dev/$j` - 33)) oflag=direct &
+		pids[${i}]=$!
+		let i++
+	else
+		echo "*** OS drive skipped ***"
+	fi
+done
+echo "Waiting for completion of end of drive wipe"
+wait 
