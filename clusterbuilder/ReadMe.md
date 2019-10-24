@@ -32,3 +32,5 @@ To use these scripts, create 3 files
 
 After creating the three files, simply run the buildit.sh script.
 
+put the policy.cfg in /root
+extract the perfcluster.tgz file and move the performancecluster directory to /root e.g. mv performancecluster /root/
