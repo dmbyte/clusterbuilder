@@ -5,6 +5,8 @@ if [ $# -eq 0 ]
   else
 	zeroit=nozero
 fi
+
+
 #check if cluster.lst file is present
 if [ ! -f cluster.lst ];then
         echo "!! You must create the clusters.lst file for this to work."
@@ -38,11 +40,14 @@ fi
 
 #copy public key to loadgens
 
+#read -r -p "Enter root Password (assuming all nodes have the same root password) " mypass
 for m in `cat cluster.lst`
 do
     echo "** Now copying public key to $m."
     echo "   You'll be prompted for the root password on that host."
-    ssh-copy-id -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa.pub root@$m &>/dev/null
+    spawn ssh-copy-id -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa.pub root@$m &>/dev/null
+#    expect "*assword:" { send "$mypass\n";}
+    
 done
 
 for m in `cat cluster.lst`
@@ -71,7 +76,7 @@ systemctl start salt-minion.service
 echo "*** Installing and starting salt on cluster nodes ***"
 for n in `cat cluster.lst`;
 do
-	ssh root@$n "zypper in -y salt-minion;echo master: $myname >/etc/salt/minion;systemctl enable salt-minion.service;systemctl start salt-minion.service"
+	ssh root@$n "hostname;zypper in -y salt-minion;echo master: $myname >/etc/salt/minion;systemctl enable salt-minion.service;systemctl start salt-minion.service"
 done
 echo "*** Letting things settle for 30 seconds ***"
 sleep 30s
@@ -92,28 +97,41 @@ zypper in -y deepsea
 echo "*** Letting things settle for 15 seconds ***"
 sleep 15s
 salt '*' grains.append deepsea default
+salt '*' cmd.run 'SUSEConnect -p ses/6/x86_64'
 echo "*** Letting things settle for 15 seconds before stage 0 ***"
 sleep 15s
+salt '*' grains.append deepsea default
 deepsea stage run ceph.stage.0
 echo "*** Letting things settle for 15 seconds before stage 1 ***"
 sleep 15s
 deepsea stage run ceph.stage.1
 rm -rf /srv/pillar/ceph/proposals/profile-default
-echo "Time to build your propasal"
+#echo "Time to build your propasal"
+#read -r -p "press enter to continue" response
 # run lsblk -o SIZE,TYPE,ROTA,TRAN |grep disk|uniq for each node, 
 #echo This is a list of the drives on each node
 #for i in `cat osdnodes.lst`
 #do 
 #    lsblk -o SIZE,TYPE,ROTA,TRAN|grep disk|sort|uniq -c;part=`cat /etc/mtab |cut -f1 -d" "|grep dev|uniq|grep "/"|xargs|cut -f1 -d" "`;part=${part#/dev/};disk=$(readlink /sys/class/block/$part);disk=${disk%/*};disk=${disk##*/};osdrive=$disk;echo "osdrive="`lsblk -o SIZE,TYPE,ROTA,TRAN,kname|grep $osdrive|grep disk`
 #done
-salt-run proposal.populate name=default ratio=6 target='4*' format=bluestore wal-size=2g db-size=60g db=400-500 wal=400-500 data=3000-8000
+#salt-run proposal.populate name=default target='sr650-*' format=bluestore standalone=True
 cp -rp /root/policy.cfg /srv/pillar/ceph/proposals/
+cp -rp /root/performancecluster/* /srv/salt/ceph/configuration/files/ceph.conf.d/
 echo "*** Letting things settle for 15 seconds before stage 2 ***"
 sleep 15s
 deepsea stage run ceph.stage.2
+echo "time to fix the policy, drive group, etc"
+echo -e "count\t\tmodel\t\t\t\t\tsize\trotational";salt "sr650*" cmd.run "lsblk -o model,size,rota"|grep -v ":"|grep -v "ROTA"|sort|uniq -c
+read -r -p "press enter to edit the drive_groups.yml.  reference on editing the file:https://documentation.suse.com/ses/6/single-html/ses-deployment/#ds-drive-groups" responsein
+vi /srv/salt/ceph/configuration/files/drive_groups.yml
 echo "*** Letting things settle for 15 seconds before stage 3 ***"
 sleep 15s
+echo "*** Disabling subvolume check and running stage 3 ***"
+echo "subvolume_init: disabled">/srv/pillar/ceph/stack/global.yml
+salt '*' saltutil.refresh_pillar
 deepsea stage run ceph.stage.3
 echo "*** Letting things settle for 15 seconds before stage 4 ***"
 sleep 15s
 deepsea stage run ceph.stage.4
+sleep 10s
+salt-call grains.get dashboard_creds
