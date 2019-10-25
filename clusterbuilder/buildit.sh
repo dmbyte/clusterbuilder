@@ -107,16 +107,9 @@ echo "*** Letting things settle for 15 seconds before stage 1 ***"
 sleep 15s
 deepsea stage run ceph.stage.1
 rm -rf /srv/pillar/ceph/proposals/profile-default
-#echo "Time to build your propasal"
-#read -r -p "press enter to continue" response
-# run lsblk -o SIZE,TYPE,ROTA,TRAN |grep disk|uniq for each node, 
-#echo This is a list of the drives on each node
-#for i in `cat osdnodes.lst`
-#do 
-#    lsblk -o SIZE,TYPE,ROTA,TRAN|grep disk|sort|uniq -c;part=`cat /etc/mtab |cut -f1 -d" "|grep dev|uniq|grep "/"|xargs|cut -f1 -d" "`;part=${part#/dev/};disk=$(readlink /sys/class/block/$part);disk=${disk%/*};disk=${disk##*/};osdrive=$disk;echo "osdrive="`lsblk -o SIZE,TYPE,ROTA,TRAN,kname|grep $osdrive|grep disk`
-#done
-#salt-run proposal.populate name=default target='sr650-*' format=bluestore standalone=True
+
 cp -rp /root/policy.cfg /srv/pillar/ceph/proposals/
+vi /srv/pillar/ceph/proposals/policy.cfg
 cp -rp /root/performancecluster/* /srv/salt/ceph/configuration/files/ceph.conf.d/
 echo "*** Letting things settle for 15 seconds before stage 2 ***"
 sleep 15s
