@@ -14,7 +14,7 @@ do
 	then
 		echo "*** wiping $j ***"
 		
-                dd if=/dev/zero of=/dev/$j bs=1M count=1024 oflag=direct &
+                dd if=/dev/zero of=/dev/$j bs=1M count=1024 oflag=direct > /dev/null 2>&1 &
 		pids[${i}]=$!
 		let i++
 	else
@@ -31,7 +31,7 @@ do
 	then
 		echo "*** wiping $j ***"
 		
-                sgdisk -Z -g /dev/$j &
+                sgdisk -Z -g /dev/$j > /dev/null 2>&1 &
 		pids[${i}]=$!
 		let i++
 	else
@@ -48,7 +48,7 @@ do
 	then
 		echo "*** wiping $j ***"
 		
-		dd if=/dev/zero of=/dev/$j bs=512 count=34 oflag=direct &
+		dd if=/dev/zero of=/dev/$j bs=512 count=34 oflag=direct > /dev/null 2>&1 &
 		pids[${i}]=$!
 		let i++
 	else
@@ -65,7 +65,7 @@ do
 	then
 		echo "*** wiping $j ***"
 		
-		dd if=/dev/zero of=/dev/$j bs=512 count=33 seek=$((`blockdev --getsz /dev/$j` - 33)) oflag=direct &
+		dd if=/dev/zero of=/dev/$j bs=512 count=33 seek=$((`blockdev --getsz /dev/$j` - 33)) oflag=direct > /dev/null 2>&1 &
 		pids[${i}]=$!
 		let i++
 	else
