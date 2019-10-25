@@ -89,6 +89,7 @@ if [ zeroit != 'nozero' ];then
 	echo "*** Wiping non-OS drives - 5 seconds to abort ***"
 	sleep 5s
 	salt '*' cmd.run 'if [ -e "/root/wipedrives.sh" ];then sh /root/wipedrives.sh;fi'
+	sleep 2s
 	salt '*' cmd.run 'if [ -e "/root/wipedrives.sh" ];then rm -f /root/wipedrives.sh;fi'
 fi
 echo "*** Letting things settle for 30 seconds ***"
