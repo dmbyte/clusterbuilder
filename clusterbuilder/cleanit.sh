@@ -1,23 +1,20 @@
 #!/bin/bash
 
-for i in `cat cluster.lst`;
-do
-	echo "**** Stopping and removing ceph packages from $i"
-ssh root@$i "systemctl stop ceph-osd.target"
-ssh root@$i "systemctl stop ceph-mgr.target"
-ssh root@$i "systemctl stop ceph-mon.target"
-ssh root@$i "systemctl stop ceph-mds.target"
-ssh root@$i "systemctl stop prometheus-ceph_exporter.service"
-ssh root@$i "systemctl stop apache2"
-ssh root@$i "systemctl stop ceph.target"
-ssh root@$i "systemctl disable ceph.target"
-ssh root@$i "systemctl disable ceph-osd.target"
-ssh root@$i "systemctl disable ceph-mgr.target"
-ssh root@$i "systemctl disable ceph-mon.target"
-ssh root@$i "systemctl disable ceph-mds.target"
-ssh root@$i "systemctl disable prometheus-ceph_exporter.service"
-ssh root@$i "zypper rm -y ceph-base ceph-common deepsea golang-github-prometheus-prometheus golang-github-prometheus-node_exporter golang-github-prometheus-alertmanager grafana "
-done
+echo "**** Stopping and removing ceph packages"
+salt '*' cmd.run 'systemctl stop ceph-osd.target'
+salt '*' cmd.run 'systemctl stop ceph-mgr.target'
+salt '*' cmd.run 'systemctl stop ceph-mon.target'
+salt '*' cmd.run 'systemctl stop ceph-mds.target'
+salt '*' cmd.run 'systemctl stop prometheus-ceph_exporter.service'
+salt '*' cmd.run 'systemctl stop apache2'
+salt '*' cmd.run 'systemctl stop ceph.target'
+salt '*' cmd.run 'systemctl disable ceph.target'
+salt '*' cmd.run 'systemctl disable ceph-osd.target'
+salt '*' cmd.run 'systemctl disable ceph-mgr.target'
+salt '*' cmd.run 'systemctl disable ceph-mon.target'
+salt '*' cmd.run 'systemctl disable ceph-mds.target'
+salt '*' cmd.run 'systemctl disable prometheus-ceph_exporter.service'
+salt '*' cmd.run 'zypper rm -y ceph-base ceph-common deepsea golang-github-prometheus-prometheus golang-github-prometheus-node_exporter golang-github-prometheus-alertmanager grafana'
 for i in `cat osdnodes.lst`;
 do
 	echo "copy drivewiper to $i"
