@@ -6,6 +6,14 @@ if [ $# -eq 0 ]
 	zeroit=nozero
 fi
 
+echo "*** Doing some pre-flight checks ***"
+#check if there is crap in iptables
+if [ `iptables -nL|wc -l` -gt 8 ];then
+	echo "Warning!  There is stuff in iptables. This may break deepsea!"
+	iptables -nl
+	echo "You can abort now and fix it and then re-run the buildit script"
+	read -r -p "Abort now or press enter to continue " mycrap
+fi
 
 #check if cluster.lst file is present
 if [ ! -f cluster.lst ];then
@@ -31,7 +39,7 @@ do
     fi
 done
 
-echo "** First we'll ensure that we have uninhibited access by use ssh keys"
+echo "** Ensure that we have uninhibited access by use ssh keys"
 #Check if public key is present
 if [ ! -f ~/.ssh/id_rsa.pub ];then
         echo "** Need to generate rsa keypair for this host"
@@ -90,6 +98,7 @@ if [ zeroit != 'nozero' ];then
 	sleep 5s
 	salt '*' cmd.run 'if [ -e "/root/wipedrives.sh" ];then sh /root/wipedrives.sh;fi'
 	sleep 2s
+	echo "*** Removing wipedrives.sh from nodes ***"
 	salt '*' cmd.run 'if [ -e "/root/wipedrives.sh" ];then rm -f /root/wipedrives.sh;fi'
 fi
 echo "*** Letting things settle for 30 seconds ***"
@@ -110,14 +119,25 @@ rm -rf /srv/pillar/ceph/proposals/profile-default
 
 cp -rp /root/policy.cfg /srv/pillar/ceph/proposals/
 vi /srv/pillar/ceph/proposals/policy.cfg
-cp -rp /root/performancecluster/* /srv/salt/ceph/configuration/files/ceph.conf.d/
+#cp -rp /root/performancecluster/* /srv/salt/ceph/configuration/files/ceph.conf.d/
 echo "*** Letting things settle for 15 seconds before stage 2 ***"
 sleep 15s
 deepsea stage run ceph.stage.2
 echo "time to fix the policy, drive group, etc"
-echo -e "count\t\tmodel\t\t\t\t\tsize\trotational";salt "sr650*" cmd.run "lsblk -o model,size,rota"|grep -v ":"|grep -v "ROTA"|sort|uniq -c
+echo -e "count\t\tmodel\t\t\t\t\tsize\trotational";salt "ses-osd*" cmd.run "lsblk -o model,size,rota"|grep -v ":"|grep -v "ROTA"|sort|uniq -c
 read -r -p "press enter to edit the drive_groups.yml.  reference on editing the file:https://documentation.suse.com/ses/6/single-html/ses-deployment/#ds-drive-groups" responsein
-vi /srv/salt/ceph/configuration/files/drive_groups.yml
+#vi /srv/salt/ceph/configuration/files/drive_groups.yml
+while [[ $drivegrouphappy != [YyNn] ]];
+	do
+		echo "*** Your drivegroup configuration currently yield the following:"
+		salt-run disks.report
+		read -r -p "Is this what you wish to have happen? [Y/n] " drivegrouphappy
+		if [[ $drivegrouphappy != [Yy] ]]; then
+			vi /srv/salt/ceph/configuration/files/drive_groups.yml
+			drivegrouphappy=''
+		fi
+	done
+
 echo "*** Letting things settle for 15 seconds before stage 3 ***"
 sleep 15s
 echo "*** Disabling subvolume check and running stage 3 ***"
