@@ -17,19 +17,23 @@ fi
 
 #check if cluster.lst file is present
 if [ ! -f cluster.lst ];then
-        echo "!! You must create the clusters.lst file for this to work."
-        echo "   The file should contain a list of all the cluster nodes with"
-        echo "   one per line. This includes salt/admin, monitor, gateways, etc"
-
-        exit
+        echo >cluster.lst "#This file should contain the list of all nodes in the cluster"
+        echo >>cluster.lst ""
+        echo >>cluster.lst "#This node (the admin node) should be the last in the list"
+	echo $HOSTNAME >>cluster.lst
+	
 fi
+read -r -p "Press return to edit the cluster.lst file"
+vi cluster.lst
 
 if [ ! -f osdnodes.lst ];then
-        echo "!! You must create the osdnodes.lst file for this to work."
-        echo "   The file should contain a list of all the osd nodes with one"
-        echo "   per line."
-        exit
+        echo >osdnodes.lst "# This file should contain the list of all osdnodes in the cluster.  The admin node should not be included"
+	echo >>osdnodes.lst"# Additionally, every node in this list should be in the cluster.lst file"
+ 	
 fi
+read -r -p "Press return to edit the osdnodes.lst file"
+vi osdnodes.lst
+
 #check name resolution for all nodes
 for m in `cat cluster.lst`
 do
@@ -151,4 +155,5 @@ echo "*** Letting things settle for 15 seconds before stage 4 ***"
 sleep 15s
 deepsea stage run ceph.stage.4
 sleep 10s
+echo "Dashboard Credentials to be used on the manager nodes with a web browser"
 salt-call grains.get dashboard_creds
