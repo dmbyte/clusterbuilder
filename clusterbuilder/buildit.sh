@@ -1,11 +1,22 @@
 #!/bin/bash
+editfile(){
+	FILENAME=$1	
+	BACKTITLE="David's SUSE Enterprise Storage Installer"
+	INPUT=/tmp/t.sh.$$
+	dialog --title "Edit" --backtitle "$BACKTITLE" --editbox $FILENAME 40 90 2> "${INPUT}"
+	cp ${INPUT} $FILENAME 
+	rm /tmp/t.sh.$$
+}
+
 if [ $# -eq 0 ]
   then
 	zeroit=dozero
   else
 	zeroit=nozero
 fi
-
+if [ ! -f /usr/bin/dialog];then
+	zypper in -y dialog
+fi
 echo "*** Doing some pre-flight checks ***"
 #check if there is crap in iptables
 if [ `iptables -nL|wc -l` -gt 8 ];then
@@ -24,7 +35,8 @@ if [ ! -f cluster.lst ];then
 	
 fi
 read -r -p "Press return to edit the cluster.lst file"
-vi cluster.lst
+#vi cluster.lst
+editfile cluster.lst
 
 if [ ! -f osdnodes.lst ];then
         echo >osdnodes.lst "# This file should contain the list of all osdnodes in the cluster.  The admin node should not be included"
@@ -32,7 +44,8 @@ if [ ! -f osdnodes.lst ];then
  	
 fi
 read -r -p "Press return to edit the osdnodes.lst file"
-vi osdnodes.lst
+editfile osdnodes.lst
+#vi osdnodes.lst
 
 #check name resolution for all nodes
 for m in `cat cluster.lst`
@@ -155,5 +168,5 @@ echo "*** Letting things settle for 15 seconds before stage 4 ***"
 sleep 15s
 deepsea stage run ceph.stage.4
 sleep 10s
-echo "Dashboard Credentials to be used on the manager nodes with a web browser"
+echo "Dashboard Credentials to be used on the manager nodes"
 salt-call grains.get dashboard_creds
