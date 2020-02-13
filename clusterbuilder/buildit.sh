@@ -120,11 +120,14 @@ rm -rf /srv/pillar/ceph/proposals/profile-default
 cp -rp /root/policy.cfg /srv/pillar/ceph/proposals/
 vi /srv/pillar/ceph/proposals/policy.cfg
 #cp -rp /root/performancecluster/* /srv/salt/ceph/configuration/files/ceph.conf.d/
+read -r -p "Make any changes you need to the network config" responsein
+vi /srv/pillar/ceph/proposals/config/stack/default/ceph/cluster.yml
+
 echo "*** Letting things settle for 15 seconds before stage 2 ***"
 sleep 15s
 deepsea stage run ceph.stage.2
 echo "time to fix the policy, drive group, etc"
-echo -e "count\t\tmodel\t\t\t\t\tsize\trotational";salt "ses-osd*" cmd.run "lsblk -o model,size,rota"|grep -v ":"|grep -v "ROTA"|sort|uniq -c
+echo -e "count\t\tmodel\t\t\t\t\tsize\trotational";salt -I roles:storage cmd.run "lsblk -o model,size,rota"|grep -v ":"|grep -v "ROTA"|sort|uniq -c
 read -r -p "press enter to edit the drive_groups.yml.  reference on editing the file:https://documentation.suse.com/ses/6/single-html/ses-deployment/#ds-drive-groups" responsein
 #vi /srv/salt/ceph/configuration/files/drive_groups.yml
 while [[ $drivegrouphappy != [YyNn] ]];
