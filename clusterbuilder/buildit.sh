@@ -1,11 +1,34 @@
 #!/bin/bash
+#Global Variables
+BACKTITLE="David's SUSE Enterprise Storage Installer"
+MYHOME=~
+DIALOGTMP=/tmp/buildit.sh.$$
 editfile(){
 	FILENAME=$1	
-	BACKTITLE="David's SUSE Enterprise Storage Installer"
-	INPUT=/tmp/t.sh.$$
-	dialog --title "Edit" --backtitle "$BACKTITLE" --editbox $FILENAME 40 90 2> "${INPUT}"
-	cp ${INPUT} $FILENAME 
-	rm /tmp/t.sh.$$
+	dialog --title "Edit" --backtitle "$BACKTITLE" --editbox $FILENAME 40 90 2> "${DIALOGTMP}"
+	rm $DIALOGTMP
+	cp ${DIALOGTMP} $FILENAME 
+
+}
+msgbox(){
+	MESSAGE=$1
+	dialog --msgbox "$MESSAGE" 0 0 --backtitle "$BACKTITLE" 
+}
+inputbox(){
+	MESSAGE=$1
+	dialog --backtitle "$BACKTITLE" --inputbox "$MESSAGE" 0 0 2>"${DIALOGTMP}"
+	response=$?
+	inputboxreturn=$(<$DIALOGTMP)
+	rm $DIALOGTMP
+	
+}
+passwdbox(){
+	MESSAGE=$1
+	dialog --backtitle "$BACKTITLE" --clear --insecure --passwordbox "$MESSAGE" 0 0 2>"${DIALOGTMP}"
+	response=$?
+	passwdboxreturn=$(<$DIALOGTMP)
+	rm $DIALOGTMP
+	
 }
 
 if [ $# -eq 0 ]
@@ -34,7 +57,7 @@ if [ ! -f cluster.lst ];then
 	echo $HOSTNAME >>cluster.lst
 	
 fi
-read -r -p "Press return to edit the cluster.lst file"
+msgbox "Press return to edit the cluster.lst file"
 #vi cluster.lst
 editfile cluster.lst
 
@@ -43,7 +66,7 @@ if [ ! -f osdnodes.lst ];then
 	echo >>osdnodes.lst"# Additionally, every node in this list should be in the cluster.lst file"
  	
 fi
-read -r -p "Press return to edit the osdnodes.lst file"
+msgbox "Press return to edit the osdnodes.lst file"
 editfile osdnodes.lst
 #vi osdnodes.lst
 
@@ -51,7 +74,7 @@ editfile osdnodes.lst
 for m in `cat cluster.lst`
 do
     if ! host $m &>/dev/null;then
-        echo "!! Host $m does not resolve to an IP.  Please fix and re-run"
+        msgbox "!! Host $m does not resolve to an IP.  Please fix and re-run"
         exit
     fi
 done
@@ -65,23 +88,57 @@ fi
 
 #copy public key to loadgens
 
-#read -r -p "Enter root Password (assuming all nodes have the same root password) " mypass
+passwdbox "Enter root Password (assuming all nodes have the same root password) " 
+mypass=$passwdboxreturn
 for m in `cat cluster.lst`
 do
-    echo "** Now copying public key to $m."
-    echo "   You'll be prompted for the root password on that host."
-    spawn ssh-copy-id -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa.pub root@$m &>/dev/null
-#    expect "*assword:" { send "$mypass\n";}
-    
-done
+    #echo "** Now copying public key to $m."
+    #echo "   You'll be prompted for the root password on that host."
+#    expect <<EOF
+#    spawn ssh-copy-id -o StrictHostKeyChecking=no -i $MYHOME/.ssh/id_rsa.pub root@$m 
+#    expect "assword:" {
+#	send "$mypass\n"
+#    }
+#    eof 
+#
+#EOF
+ssh -q -o PreferredAuthentications=publickey root@$m /bin/true
+if [ $? -eq 255 ];then 
+          /usr/bin/expect -c "set timeout 50; spawn ssh-copy-id -f -i $MYHOME/.ssh/id_rsa.pub root@$m;
+
+          expect {
+                  \"assword: \" {
+                  send \"$mypass\n\"
+                  expect {
+                      \"again.\"     { exit 1 }
+                      \"expecting.\" { }
+                      timeout      { exit 1 }
+                  }
+              }
+              \"(yes/no)? \" {
+                  send \"yes\n\"
+                  expect {
+                      \"assword: \" {
+                          send \"$mypass\n\"
+                          expect {
+                              \"again.\"     { exit 1 }
+                              \"expecting.\" { }
+                              timeout      { exit 1 }
+                          }
+                      }
+                  }
+              }
+          }"
+	  ssh root@$m "uniq $MYHOME/.ssh/authorized_keys >$MYHOME/.ssh/authorized_keys.clean;cat $MYHOME/.ssh/authorized_keys.clean>$MYHOME/.ssh/authorized_keys;rm $MYHOME/.ssh/authorized_keys.clean"
+  fi
+  done
 
 for m in `cat cluster.lst`
 do 
-    ssh root@$m 'exit'
-    if [ $? -ne 0 ]
+    ssh -q -o PreferredAuthentications=publickey root@$m /bin/true
+	if [ $? -ne 0 ]
     then
-        echo "SSH to $m seems not to be working.  Please correct and re-run"
-        echo "the script."
+        msgbox "passwordless SSH to $m seems not to be working.  Please correct and re-run the script."
         exit
     fi
 done
@@ -135,17 +192,16 @@ deepsea stage run ceph.stage.1
 rm -rf /srv/pillar/ceph/proposals/profile-default
 
 cp -rp /root/policy.cfg /srv/pillar/ceph/proposals/
-vi /srv/pillar/ceph/proposals/policy.cfg
+editfile /srv/pillar/ceph/proposals/policy.cfg
 #cp -rp /root/performancecluster/* /srv/salt/ceph/configuration/files/ceph.conf.d/
-read -r -p "Make any changes you need to the network config" responsein
-vi /srv/pillar/ceph/proposals/config/stack/default/ceph/cluster.yml
+msgbox "Make any changes you need to the network config"
+editfile /srv/pillar/ceph/proposals/config/stack/default/ceph/cluster.yml
 
 echo "*** Letting things settle for 15 seconds before stage 2 ***"
 sleep 15s
 deepsea stage run ceph.stage.2
 echo "time to fix the policy, drive group, etc"
 echo -e "count\t\tmodel\t\t\t\t\tsize\trotational";salt -I roles:storage cmd.run "lsblk -o model,size,rota"|grep -v ":"|grep -v "ROTA"|sort|uniq -c
-read -r -p "press enter to edit the drive_groups.yml.  reference on editing the file:https://documentation.suse.com/ses/6/single-html/ses-deployment/#ds-drive-groups" responsein
 #vi /srv/salt/ceph/configuration/files/drive_groups.yml
 while [[ $drivegrouphappy != [YyNn] ]];
 	do
@@ -153,7 +209,8 @@ while [[ $drivegrouphappy != [YyNn] ]];
 		salt-run disks.report
 		read -r -p "Is this what you wish to have happen? [Y/n] " drivegrouphappy
 		if [[ $drivegrouphappy != [Yy] ]]; then
-			vi /srv/salt/ceph/configuration/files/drive_groups.yml
+msgbox "press enter to edit the drive_groups.yml.  reference on editing the file:https://documentation.suse.com/ses/6/single-html/ses-deployment/#ds-drive-groups" 
+			editfile /srv/salt/ceph/configuration/files/drive_groups.yml
 			drivegrouphappy=''
 		fi
 	done
