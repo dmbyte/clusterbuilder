@@ -12,7 +12,7 @@ editfile(){
 }
 msgbox(){
 	MESSAGE=$1
-	dialog --msgbox "$MESSAGE" 0 0 --backtitle "$BACKTITLE" 
+	dialog --backtitle "$BACKTITLE" --msgbox "$MESSAGE" 0 0 
 }
 inputbox(){
 	MESSAGE=$1
