@@ -166,7 +166,7 @@ salt-key --accept-all
 if [ zeroit != 'nozero' ];then
 	for i in `cat osdnodes.lst`;
 	do
-       		scp /root/wipedrives.sh.src root@$i:/root/wipedrives.sh
+       		scp $PWD/wipedrives.sh.src root@$i:/root/wipedrives.sh
 	done
 	echo "*** Wiping non-OS drives - 5 seconds to abort ***"
 	sleep 5s
@@ -191,7 +191,7 @@ sleep 15s
 deepsea stage run ceph.stage.1
 rm -rf /srv/pillar/ceph/proposals/profile-default
 
-cp -rp /root/policy.cfg /srv/pillar/ceph/proposals/
+cp -rp $PWD/policy.cfg /srv/pillar/ceph/proposals/
 editfile /srv/pillar/ceph/proposals/policy.cfg
 #cp -rp /root/performancecluster/* /srv/salt/ceph/configuration/files/ceph.conf.d/
 msgbox "Make any changes you need to the network config"
