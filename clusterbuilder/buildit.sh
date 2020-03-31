@@ -6,8 +6,8 @@ DIALOGTMP=/tmp/buildit.sh.$$
 editfile(){
 	FILENAME=$1	
 	dialog --title "Edit" --backtitle "$BACKTITLE" --editbox $FILENAME 40 90 2> "${DIALOGTMP}"
-	rm $DIALOGTMP
 	cp ${DIALOGTMP} $FILENAME 
+	rm $DIALOGTMP
 
 }
 msgbox(){
