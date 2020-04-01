@@ -207,6 +207,9 @@ deepsea stage run ceph.stage.2
 echo "time to fix the policy, drive group, etc"
 echo -e "count\t\tmodel\t\t\t\t\tsize\trotational";salt -I roles:storage cmd.run "lsblk -o model,size,rota"|grep -v ":"|grep -v "ROTA"|sort|uniq -c
 #vi /srv/salt/ceph/configuration/files/drive_groups.yml
+if [ -f $PWD/drive_groups.yml ];then
+	cp $PWD/drive_groups.yml /srv/salt/ceph/configuration/files/drive_groups.yml
+fi
 while [[ $drivegrouphappy != [YyNn] ]];
 	do
 		echo "*** Your drivegroup configuration currently yield the following:"
