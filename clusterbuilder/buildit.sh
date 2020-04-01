@@ -108,7 +108,7 @@ do
 #EOF
 ssh -q -o PreferredAuthentications=publickey root@$m /bin/true
 if [ $? -eq 255 ];then 
-          /usr/bin/expect -c "set timeout 50; spawn ssh-copy-id -f -i $MYHOME/.ssh/id_rsa.pub root@$m;
+          /usr/bin/expect -c "set timeout 50; spawn ssh-copy-id -o StrictHostKeyChecking=no -f -i $MYHOME/.ssh/id_rsa.pub root@$m;
 
           expect {
                   \"assword: \" {
