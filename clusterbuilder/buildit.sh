@@ -1,4 +1,8 @@
 #!/bin/bash
+#ensure dialog is installed
+if [ ! -f /usr/bin/dialog ];then
+	zypper in -y dialog	
+fi
 #Global Variables
 BACKTITLE="David's SUSE Enterprise Storage Installer"
 MYHOME=~
