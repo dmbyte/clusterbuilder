@@ -34,7 +34,11 @@ passwdbox(){
 	rm $DIALOGTMP
 	
 }
-
+msgbox "First check to ensure this node is syncing to a time server. If not, time server configuration will be launched."
+if [ `grep -v"#" /etc/chrony.conf|grep pool|wc -l`] -lt 1}
+  then
+  yast2 ntp-client
+fi
 if [ $# -eq 0 ]
   then
 	zeroit=dozero
@@ -146,7 +150,13 @@ do
         exit
     fi
 done
+echo '*** Copying the local time config to all nodes and restarting time service.'
+for i in `cat $PWD/cluster.lst`
+  do 
+  scp /etc/chrony.conf root@$i:/etc/
+  ssh root@$i 'systemctl restart chronyd.service'
 
+done
 
 
 export DEV_ENV=true
