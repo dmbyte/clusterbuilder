@@ -235,6 +235,6 @@ sleep 10s
 echo "Dashboard will be on the manager nodes on port 8080"
 ceph config set mgr mgr/dashboard/ssl false
 ceph mgr module disable dashboard
-echo "Dashboard Credentials to be used on the manager nodes"
 ceph mgr module enable dashboard
-
+echo "Dashboard Credentials to be used on the manager nodes"
+salt-call grains.get dashboard_creds
